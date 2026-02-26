@@ -1,7 +1,8 @@
 import OpenAI from "openai";
+import { getRequiredEnv } from "@/lib/env";
 
 export async function generateDischargeReport(snapshot: unknown) {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  const client = new OpenAI({ apiKey: getRequiredEnv("OPENAI_API_KEY") });
 
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",

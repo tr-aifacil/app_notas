@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { createAdminSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase, createServerSupabase } from "@/lib/supabase/server";
 
 export async function GET(_: Request, { params }: { params: { episodeId: string } }) {
+  const serverSupabase = createServerSupabase();
+  const { data: { user } } = await serverSupabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
   const supabase = createAdminSupabase();
   const episode_id = params.episodeId;
   const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();
