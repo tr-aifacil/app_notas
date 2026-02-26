@@ -1,0 +1,25 @@
+import OpenAI from "openai";
+
+export async function generateDischargeReport(snapshot: unknown) {
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+  const completion = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content:
+          "Redige um relatório clínico formal em português de Portugal, usando apenas os dados fornecidos no JSON. Não inventes nem inferes. Se faltar informação, escreve 'Não registado'. Não menciones que foste gerado por AI."
+      },
+      {
+        role: "user",
+        content:
+          "Usa este JSON (episode, sessions, scales) e escreve o relatório com as 8 secções fixas, com títulos numerados 1 a 8.\n\n" +
+          JSON.stringify(snapshot)
+      }
+    ]
+  });
+
+  return completion.choices[0]?.message?.content ?? "";
+}

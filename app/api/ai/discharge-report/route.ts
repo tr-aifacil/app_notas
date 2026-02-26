@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+import { createAdminSupabase } from "@/lib/supabase/server";
+import { generateDischargeReport } from "@/lib/reports/generateDischargeReport";
+import { evaluateAlerts } from "@/lib/alerts/evaluateAlerts";
+
+export const runtime = "nodejs";
+
+export async function POST(req: Request) {
+  const { episode_id } = await req.json();
+  if (!episode_id) return NextResponse.json({ error: "episode_id obrigatório" }, { status: 400 });
+
+  await evaluateAlerts(episode_id);
+
+  const supabase = createAdminSupabase();
+  const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();
+  const { data: sessions } = await supabase.from("session").select("*").eq("episode_id", episode_id).order("date", { ascending: true });
+  const { data: scales } = await supabase.from("scale_result").select("*").eq("episode_id", episode_id).order("applied_at", { ascending: true });
+
+  const snapshot = { episode, sessions: sessions || [], scales: scales || [] };
+  const content = await generateDischargeReport(snapshot);
+
+  const { data: report } = await supabase
+    .from("discharge_report_version")
+    .insert({
+      episode_id,
+      generated_by: "system",
+      content,
+      source_snapshot: snapshot,
+      is_final: false
+    })
+    .select("*")
+    .single();
+
+  return NextResponse.json({ report_id: report?.id, content });
+}
