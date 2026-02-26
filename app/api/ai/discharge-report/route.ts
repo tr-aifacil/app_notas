@@ -1,35 +1,44 @@
 import { NextResponse } from "next/server";
-import { createAdminSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase, createServerSupabase } from "@/lib/supabase/server";
 import { generateDischargeReport } from "@/lib/reports/generateDischargeReport";
 import { evaluateAlerts } from "@/lib/alerts/evaluateAlerts";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const { episode_id } = await req.json();
-  if (!episode_id) return NextResponse.json({ error: "episode_id obrigatório" }, { status: 400 });
+  const serverSupabase = createServerSupabase();
+  const { data: { user } } = await serverSupabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  await evaluateAlerts(episode_id);
+  try {
+    const { episode_id } = await req.json();
+    if (!episode_id) return NextResponse.json({ error: "episode_id obrigatório" }, { status: 400 });
 
-  const supabase = createAdminSupabase();
-  const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();
-  const { data: sessions } = await supabase.from("session").select("*").eq("episode_id", episode_id).order("date", { ascending: true });
-  const { data: scales } = await supabase.from("scale_result").select("*").eq("episode_id", episode_id).order("applied_at", { ascending: true });
+    await evaluateAlerts(episode_id);
 
-  const snapshot = { episode, sessions: sessions || [], scales: scales || [] };
-  const content = await generateDischargeReport(snapshot);
+    const supabase = createAdminSupabase();
+    const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();
+    const { data: sessions } = await supabase.from("session").select("*").eq("episode_id", episode_id).order("date", { ascending: true });
+    const { data: scales } = await supabase.from("scale_result").select("*").eq("episode_id", episode_id).order("applied_at", { ascending: true });
 
-  const { data: report } = await supabase
-    .from("discharge_report_version")
-    .insert({
-      episode_id,
-      generated_by: "system",
-      content,
-      source_snapshot: snapshot,
-      is_final: false
-    })
-    .select("*")
-    .single();
+    const snapshot = { episode, sessions: sessions || [], scales: scales || [] };
+    const content = await generateDischargeReport(snapshot);
 
-  return NextResponse.json({ report_id: report?.id, content });
+    const { data: report } = await supabase
+      .from("discharge_report_version")
+      .insert({
+        episode_id,
+        generated_by: user.email ?? "system",
+        content,
+        source_snapshot: snapshot,
+        is_final: false
+      })
+      .select("*")
+      .single();
+
+    return NextResponse.json({ report_id: report?.id, content });
+  } catch (err) {
+    console.error("[discharge-report]", err);
+    return NextResponse.json({ error: "Erro ao gerar relatório de alta." }, { status: 500 });
+  }
 }
