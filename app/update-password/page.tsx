@@ -14,18 +14,28 @@ export default function UpdatePasswordPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("code");
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) setError("Link inválido ou expirado. Pede um novo.");
-        else setReady(true);
-      });
-    } else {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) setReady(true);
-        else setError("Link inválido ou expirado. Pede um novo.");
-      });
-    }
+    // @supabase/ssr troca ?code= automaticamente (detectSessionInUrl: true)
+    // Ouvir o evento PASSWORD_RECOVERY que é disparado após essa troca automática
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setReady(true);
+      }
+    });
+
+    // Verificar se a sessão já existe (troca pode ter corrido antes deste useEffect)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setReady(true);
+      } else {
+        const hasCode = new URLSearchParams(window.location.search).has("code");
+        const hasHash = window.location.hash.includes("access_token");
+        if (!hasCode && !hasHash) {
+          setError("Link inválido ou expirado. Pede um novo.");
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -37,7 +47,7 @@ export default function UpdatePasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) return setError(error.message);
-    router.push("/patients");
+    router.push("/login");
   };
 
   return (
