@@ -35,6 +35,9 @@ export default function LoginPage() {
           <button className="btn-primary w-full" type="submit">Entrar</button>
         </form>
         {msg && <p className="mt-3 text-sm text-red-600">{msg}</p>}
+        <p className="mt-3 text-sm text-center">
+          <a href="/reset-password" className="text-blue-600 hover:underline">Esqueceu a password?</a>
+        </p>
       </div>
     </main>
   );
