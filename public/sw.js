@@ -1,5 +1,5 @@
-const CACHE_NAME = "clinreg-v1";
-const URLS = ["/", "/login", "/patients"];
+const CACHE_NAME = "clinreg-v2";
+const URLS = ["/login"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(URLS)));
