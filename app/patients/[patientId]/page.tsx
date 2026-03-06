@@ -12,6 +12,9 @@ export default async function PatientDetail({ params }: { params: { patientId: s
 
   return (
     <main className="container-page">
+      <div className="mb-2">
+        <Link className="text-sm text-slate-500 hover:text-slate-700" href="/patients">← Voltar</Link>
+      </div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Paciente: {patient?.internal_code}</h1>
         <Link className="btn-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>

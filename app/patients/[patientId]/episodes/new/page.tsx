@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 
@@ -31,6 +32,9 @@ export default function NewEpisodePage() {
 
   return (
     <main className="container-page max-w-xl">
+      <div className="mb-2">
+        <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/patients/${params.patientId}`}>← Voltar</Link>
+      </div>
       <div className="card">
         <h1 className="mb-4 text-xl font-semibold">Novo Episódio</h1>
         <form onSubmit={onSubmit} className="space-y-3">
