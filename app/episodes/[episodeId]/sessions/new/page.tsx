@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
+import BackButton from "@/components/BackButton";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 const sections: { key: S; title: string }[] = [

@@ -57,6 +57,7 @@ export default function SectionCard(props: Props) {
     if (!mediaRecorderRef.current) return;
     setError(null);
     setBusy(true);
+    setErrorMsg("");
 
     try {
       const recorder = mediaRecorderRef.current;
@@ -121,6 +122,7 @@ export default function SectionCard(props: Props) {
         )}
         <button className="btn-primary" onClick={organize} type="button" disabled={busy}>Organizar com AI</button>
       </div>
+      {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

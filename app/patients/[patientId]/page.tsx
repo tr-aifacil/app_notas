@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import BackButton from "@/components/BackButton";
 
 export default async function PatientDetail({ params }: { params: { patientId: string } }) {
   const supabase = createServerSupabase();
@@ -16,7 +17,10 @@ export default async function PatientDetail({ params }: { params: { patientId: s
         <Link className="text-sm text-slate-500 hover:text-slate-700" href="/patients">← Voltar</Link>
       </div>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Paciente: {patient?.internal_code}</h1>
+        <div className="flex items-center gap-2">
+          <BackButton fallbackHref="/patients" />
+          <h1 className="text-xl font-semibold">Paciente: {patient?.internal_code}</h1>
+        </div>
         <Link className="btn-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
       </div>
 
