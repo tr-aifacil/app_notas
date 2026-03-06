@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import BackButton from "@/components/BackButton";
@@ -32,6 +33,9 @@ export default function NewEpisodePage() {
 
   return (
     <main className="container-page max-w-xl">
+      <div className="mb-2">
+        <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/patients/${params.patientId}`}>← Voltar</Link>
+      </div>
       <div className="card">
         <div className="mb-4 flex items-center gap-2">
           <BackButton fallbackHref={`/patients/${params.patientId}`} />

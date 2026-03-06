@@ -17,77 +17,75 @@ function formatJsonToText(obj: Record<string, string>) {
     .join("\n");
 }
 
+function getBestMimeType(): string {
+  const candidates = ["audio/webm", "audio/mp4", "audio/ogg"];
+  for (const type of candidates) {
+    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(type)) {
+      return type;
+    }
+  }
+  return "";
+}
+
 export default function SectionCard(props: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
   const startRecord = async () => {
+    setError(null);
     try {
-      setErrorMsg("");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const supportedMimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((mimeType) =>
-        MediaRecorder.isTypeSupported(mimeType)
-      );
-      const recorder = supportedMimeType
-        ? new MediaRecorder(stream, { mimeType: supportedMimeType })
+      const mimeType = getBestMimeType();
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
         : new MediaRecorder(stream);
-
       chunksRef.current = [];
-      recorder.ondataavailable = (ev) => {
-        if (ev.data.size > 0) chunksRef.current.push(ev.data);
-      };
-      recorder.start(250);
+      recorder.ondataavailable = (ev) => chunksRef.current.push(ev.data);
+      recorder.start();
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
     } catch (err) {
-      console.error("[record:start]", err);
-      setErrorMsg("Não foi possível iniciar a gravação. Confirma as permissões do microfone.");
-      setIsRecording(false);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Erro ao aceder ao microfone: ${msg}`);
     }
   };
 
   const stopRecordAndTranscribe = async () => {
     if (!mediaRecorderRef.current) return;
+    setError(null);
     setBusy(true);
     setErrorMsg("");
 
     try {
       const recorder = mediaRecorderRef.current;
+      const mimeType = recorder.mimeType || "audio/webm";
+
       await new Promise<void>((resolve) => {
         recorder.onstop = () => resolve();
         recorder.stop();
         recorder.stream.getTracks().forEach((t) => t.stop());
       });
 
-      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-      if (blob.size === 0) {
-        throw new Error("Gravação vazia. Verifica o microfone e tenta novamente.");
-      }
-
-      const ext = blob.type.includes("mp4") ? "mp4" : "webm";
-      const file = new File([blob], `${props.section}.${ext}`, { type: blob.type || "audio/webm" });
+      const blob = new Blob(chunksRef.current, { type: mimeType });
+      const ext = mimeType.includes("mp4") ? "mp4" : mimeType.includes("ogg") ? "ogg" : "webm";
+      const file = new File([blob], `${props.section}.${ext}`, { type: mimeType });
       const form = new FormData();
       form.append("section", props.section);
       form.append("audio", file);
 
       const res = await fetch("/api/audio/transcribe", { method: "POST", body: form });
       const json = await res.json();
-
       if (!res.ok) {
-        throw new Error(json.error || "Falha na transcrição.");
+        setError(json.error || "Erro ao transcrever áudio.");
+      } else {
+        props.onChangeTranscript(json.transcript || "");
       }
-
-      if (!json.transcript) {
-        throw new Error("A transcrição veio vazia. Tenta falar mais perto do microfone.");
-      }
-
-      props.onChangeTranscript(json.transcript);
     } catch (err) {
-      console.error("[record:stop]", err);
-      setErrorMsg(err instanceof Error ? err.message : "Erro inesperado ao transcrever.");
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Erro ao transcrever: ${msg}`);
     } finally {
       setIsRecording(false);
       setBusy(false);
@@ -96,14 +94,21 @@ export default function SectionCard(props: Props) {
 
   const organize = async () => {
     setBusy(true);
-    const res = await fetch("/api/ai/organize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section: props.section, transcricao: props.transcript })
-    });
-    const data = await res.json();
-    props.onChangeFinalText(formatJsonToText(data.json || {}));
-    setBusy(false);
+    setError(null);
+    try {
+      const res = await fetch("/api/ai/organize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: props.section, transcricao: props.transcript })
+      });
+      const data = await res.json();
+      props.onChangeFinalText(formatJsonToText(data.json || {}));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Erro ao organizar: ${msg}`);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -118,6 +123,8 @@ export default function SectionCard(props: Props) {
         <button className="btn-primary" onClick={organize} type="button" disabled={busy}>Organizar com AI</button>
       </div>
       {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div>
         <label className="label">Transcrição (editável)</label>

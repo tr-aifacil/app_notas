@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
@@ -67,10 +68,10 @@ export default function NewSessionPage() {
 
   return (
     <main className="container-page space-y-4">
-      <div className="flex items-center gap-2">
-        <BackButton fallbackHref={`/episodes/${params.episodeId}`} />
-        <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
+      <div>
+        <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/episodes/${params.episodeId}`}>← Voltar</Link>
       </div>
+      <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
 
       <div className="card grid gap-3 md:grid-cols-2">
         <div>

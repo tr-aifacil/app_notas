@@ -13,6 +13,9 @@ export default async function PatientDetail({ params }: { params: { patientId: s
 
   return (
     <main className="container-page">
+      <div className="mb-2">
+        <Link className="text-sm text-slate-500 hover:text-slate-700" href="/patients">← Voltar</Link>
+      </div>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BackButton fallbackHref="/patients" />
