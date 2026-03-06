@@ -3,6 +3,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import ScalesForm from "@/components/ScalesForm";
 import AlertsPanel from "@/components/AlertsPanel";
 import DischargeReportEditor from "@/components/DischargeReportEditor";
+import BackButton from "@/components/BackButton";
 
 export default async function EpisodePage({ params }: { params: { episodeId: string } }) {
   const supabase = createServerSupabase();
@@ -18,7 +19,10 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
     <main className="container-page space-y-4">
       <div className="card flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Episódio</h1>
+          <div className="mb-2 flex items-center gap-2">
+            <BackButton fallbackHref={episode?.patient_id ? `/patients/${episode.patient_id}` : "/patients"} />
+            <h1 className="text-xl font-semibold">Episódio</h1>
+          </div>
           <p className="text-sm text-slate-600">{episode?.profession} / {episode?.area} — {episode?.status}</p>
         </div>
         <Link className="btn-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova sessão</Link>

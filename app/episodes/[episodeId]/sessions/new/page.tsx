@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
+import BackButton from "@/components/BackButton";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 const sections: { key: S; title: string }[] = [
@@ -66,7 +67,10 @@ export default function NewSessionPage() {
 
   return (
     <main className="container-page space-y-4">
-      <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
+      <div className="flex items-center gap-2">
+        <BackButton fallbackHref={`/episodes/${params.episodeId}`} />
+        <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
+      </div>
 
       <div className="card grid gap-3 md:grid-cols-2">
         <div>

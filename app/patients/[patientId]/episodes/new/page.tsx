@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
+import BackButton from "@/components/BackButton";
 
 export default function NewEpisodePage() {
   const supabase = createClient();
@@ -32,7 +33,10 @@ export default function NewEpisodePage() {
   return (
     <main className="container-page max-w-xl">
       <div className="card">
-        <h1 className="mb-4 text-xl font-semibold">Novo Episódio</h1>
+        <div className="mb-4 flex items-center gap-2">
+          <BackButton fallbackHref={`/patients/${params.patientId}`} />
+          <h1 className="text-xl font-semibold">Novo Episódio</h1>
+        </div>
         <form onSubmit={onSubmit} className="space-y-3">
           <div><label className="label">Profissão</label><input className="input" value={profession} onChange={(e) => setProfession(e.target.value)} required /></div>
           <div><label className="label">Área</label><input className="input" value={area} onChange={(e) => setArea(e.target.value)} required /></div>

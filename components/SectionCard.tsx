@@ -20,41 +20,78 @@ function formatJsonToText(obj: Record<string, string>) {
 export default function SectionCard(props: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
   const startRecord = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-    chunksRef.current = [];
-    recorder.ondataavailable = (ev) => chunksRef.current.push(ev.data);
-    recorder.start();
-    mediaRecorderRef.current = recorder;
-    setIsRecording(true);
+    try {
+      setErrorMsg("");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const supportedMimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((mimeType) =>
+        MediaRecorder.isTypeSupported(mimeType)
+      );
+      const recorder = supportedMimeType
+        ? new MediaRecorder(stream, { mimeType: supportedMimeType })
+        : new MediaRecorder(stream);
+
+      chunksRef.current = [];
+      recorder.ondataavailable = (ev) => {
+        if (ev.data.size > 0) chunksRef.current.push(ev.data);
+      };
+      recorder.start(250);
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.error("[record:start]", err);
+      setErrorMsg("Não foi possível iniciar a gravação. Confirma as permissões do microfone.");
+      setIsRecording(false);
+    }
   };
 
   const stopRecordAndTranscribe = async () => {
     if (!mediaRecorderRef.current) return;
     setBusy(true);
+    setErrorMsg("");
 
-    const recorder = mediaRecorderRef.current;
-    await new Promise<void>((resolve) => {
-      recorder.onstop = () => resolve();
-      recorder.stop();
-      recorder.stream.getTracks().forEach((t) => t.stop());
-    });
+    try {
+      const recorder = mediaRecorderRef.current;
+      await new Promise<void>((resolve) => {
+        recorder.onstop = () => resolve();
+        recorder.stop();
+        recorder.stream.getTracks().forEach((t) => t.stop());
+      });
 
-    const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-    const file = new File([blob], `${props.section}.webm`, { type: "audio/webm" });
-    const form = new FormData();
-    form.append("section", props.section);
-    form.append("audio", file);
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+      if (blob.size === 0) {
+        throw new Error("Gravação vazia. Verifica o microfone e tenta novamente.");
+      }
 
-    const res = await fetch("/api/audio/transcribe", { method: "POST", body: form });
-    const json = await res.json();
-    props.onChangeTranscript(json.transcript || "");
-    setIsRecording(false);
-    setBusy(false);
+      const ext = blob.type.includes("mp4") ? "mp4" : "webm";
+      const file = new File([blob], `${props.section}.${ext}`, { type: blob.type || "audio/webm" });
+      const form = new FormData();
+      form.append("section", props.section);
+      form.append("audio", file);
+
+      const res = await fetch("/api/audio/transcribe", { method: "POST", body: form });
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || "Falha na transcrição.");
+      }
+
+      if (!json.transcript) {
+        throw new Error("A transcrição veio vazia. Tenta falar mais perto do microfone.");
+      }
+
+      props.onChangeTranscript(json.transcript);
+    } catch (err) {
+      console.error("[record:stop]", err);
+      setErrorMsg(err instanceof Error ? err.message : "Erro inesperado ao transcrever.");
+    } finally {
+      setIsRecording(false);
+      setBusy(false);
+    }
   };
 
   const organize = async () => {
@@ -74,12 +111,13 @@ export default function SectionCard(props: Props) {
       <h3 className="text-lg font-semibold">{props.title}</h3>
       <div className="flex gap-2">
         {!isRecording ? (
-          <button className="btn-secondary" onClick={startRecord} type="button">Gravar</button>
+          <button className="btn-secondary" onClick={startRecord} type="button" disabled={busy}>Gravar</button>
         ) : (
-          <button className="btn-secondary" onClick={stopRecordAndTranscribe} type="button">Parar</button>
+          <button className="btn-secondary" onClick={stopRecordAndTranscribe} type="button" disabled={busy}>Parar</button>
         )}
         <button className="btn-primary" onClick={organize} type="button" disabled={busy}>Organizar com AI</button>
       </div>
+      {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
 
       <div>
         <label className="label">Transcrição (editável)</label>
