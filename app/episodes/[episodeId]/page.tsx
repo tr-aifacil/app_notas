@@ -16,6 +16,9 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
 
   return (
     <main className="container-page space-y-4">
+      <div>
+        <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/patients/${episode?.patient_id}`}>← Voltar</Link>
+      </div>
       <div className="card flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Episódio</h1>
