@@ -14,12 +14,17 @@ export async function POST(req: Request) {
     const form = await req.formData();
     const audio = form.get("audio") as File | null;
     if (!audio) return NextResponse.json({ error: "audio missing" }, { status: 400 });
+    if (audio.size === 0) return NextResponse.json({ error: "Áudio vazio — tenta gravar de novo." }, { status: 400 });
+
+    console.log("[transcribe] audio size:", audio.size, "bytes, type:", audio.type);
 
     const client = new OpenAI({ apiKey: getRequiredEnv("OPENAI_API_KEY") });
     const transcript = await client.audio.transcriptions.create({
       model: "gpt-4o-mini-transcribe",
       file: audio
     });
+
+    console.log("[transcribe] transcript:", transcript.text);
 
     return NextResponse.json({ transcript: transcript.text || "" });
   } catch (err) {

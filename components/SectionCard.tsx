@@ -43,8 +43,8 @@ export default function SectionCard(props: Props) {
         ? new MediaRecorder(stream, { mimeType })
         : new MediaRecorder(stream);
       chunksRef.current = [];
-      recorder.ondataavailable = (ev) => chunksRef.current.push(ev.data);
-      recorder.start();
+      recorder.ondataavailable = (ev) => { if (ev.data.size > 0) chunksRef.current.push(ev.data); };
+      recorder.start(250);
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
     } catch (err) {
@@ -69,6 +69,10 @@ export default function SectionCard(props: Props) {
       });
 
       const blob = new Blob(chunksRef.current, { type: mimeType });
+      if (blob.size === 0) {
+        setError("Gravação vazia. Verifica o microfone e tenta novamente.");
+        return;
+      }
       const ext = mimeType.includes("mp4") ? "mp4" : mimeType.includes("ogg") ? "ogg" : "webm";
       const file = new File([blob], `${props.section}.${ext}`, { type: mimeType });
       const form = new FormData();
