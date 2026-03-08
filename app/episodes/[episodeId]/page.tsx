@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import ScalesForm from "@/components/ScalesForm";
+import ScalesList from "@/components/ScalesList";
 import AlertsPanel from "@/components/AlertsPanel";
 import DischargeReportEditor from "@/components/DischargeReportEditor";
 import BackButton from "@/components/BackButton";
+import SessionsList from "@/components/SessionsList";
+import DeleteEpisodeButton from "@/components/DeleteEpisodeButton";
+import EpisodeStatusEditor from "@/components/EpisodeStatusEditor";
 
 export default async function EpisodePage({ params }: { params: { episodeId: string } }) {
   const supabase = createServerSupabase();
@@ -20,36 +24,39 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
       <div>
         <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/patients/${episode?.patient_id}`}>← Voltar</Link>
       </div>
-      <div className="card flex items-center justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
+
+      <div className="card">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <BackButton fallbackHref={episode?.patient_id ? `/patients/${episode.patient_id}` : "/patients"} />
             <h1 className="text-xl font-semibold">Episódio</h1>
           </div>
-          <p className="text-sm text-slate-600">{episode?.profession} / {episode?.area} — {episode?.status}</p>
+          <div className="flex items-center gap-3">
+            <Link className="btn-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova sessão</Link>
+            {episode && (
+              <DeleteEpisodeButton episodeId={episode.id} patientId={episode.patient_id} />
+            )}
+          </div>
         </div>
-        <Link className="btn-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova sessão</Link>
+        <p className="text-sm text-slate-600">{episode?.profession} / {episode?.area}</p>
+        {episode && (
+          <EpisodeStatusEditor
+            episodeId={episode.id}
+            initialStatus={episode.status as "ativo" | "alta" | "administrativo"}
+            initialEndDate={episode.end_date ?? null}
+          />
+        )}
       </div>
 
       <div className="card">
         <h3 className="mb-2 text-lg font-semibold">Sessões</h3>
-        <ul className="space-y-2">
-          {(sessions || []).map((s) => (
-            <li key={s.id} className="border-b pb-2 text-sm">
-              {new Date(s.date).toLocaleString("pt-PT")} — {s.type} — {s.clinician}
-            </li>
-          ))}
-        </ul>
+        <SessionsList sessions={sessions || []} episodeId={params.episodeId} />
       </div>
 
       <ScalesForm episodeId={params.episodeId} />
       <div className="card">
         <h3 className="mb-2 text-lg font-semibold">Escalas</h3>
-        <ul className="space-y-1 text-sm">
-          {(scales || []).map((s) => (
-            <li key={s.id}>{s.type}: {s.value} ({new Date(s.applied_at).toLocaleDateString("pt-PT")})</li>
-          ))}
-        </ul>
+        <ScalesList scales={scales || []} />
       </div>
 
       <AlertsPanel alerts={alerts || []} userName={userData.user?.email || "clinician"} />

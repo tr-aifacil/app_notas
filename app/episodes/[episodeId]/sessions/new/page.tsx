@@ -101,8 +101,8 @@ export default function NewSessionPage() {
         />
       ))}
 
-      <div className="sticky bottom-4">
-        <button className="btn-primary" onClick={save}>Validar e Guardar</button>
+      <div className="flex justify-end pb-6 pt-2">
+        <button className="btn-primary px-8 py-3 text-lg" onClick={save}>Validar e Guardar</button>
       </div>
     </main>
   );

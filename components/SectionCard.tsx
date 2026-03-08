@@ -9,6 +9,7 @@ type Props = {
   finalText: string;
   onChangeTranscript: (v: string) => void;
   onChangeFinalText: (v: string) => void;
+  onSave?: (transcript: string, finalText: string) => Promise<void>;
 };
 
 function formatJsonToText(obj: Record<string, string>) {
@@ -31,6 +32,8 @@ export default function SectionCard(props: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
@@ -130,8 +133,31 @@ export default function SectionCard(props: Props) {
 
       <div>
         <label className="label">Texto final (editável)</label>
-        <textarea className="input min-h-40" value={props.finalText} onChange={(e) => props.onChangeFinalText(e.target.value)} />
+        <textarea className="input min-h-40" value={props.finalText} onChange={(e) => { props.onChangeFinalText(e.target.value); setSaved(false); }} />
       </div>
+
+      {props.onSave && (
+        <div className="flex items-center gap-3 pt-1">
+          <button
+            className="btn-secondary"
+            type="button"
+            disabled={saving || busy}
+            onClick={async () => {
+              setSaving(true);
+              setSaved(false);
+              try {
+                await props.onSave!(props.transcript, props.finalText);
+                setSaved(true);
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            {saving ? "A guardar..." : "Guardar secção"}
+          </button>
+          {saved && <span className="text-sm text-green-600">✓ Guardado</span>}
+        </div>
+      )}
     </div>
   );
 }
