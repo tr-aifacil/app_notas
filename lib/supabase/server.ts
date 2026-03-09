@@ -5,19 +5,24 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export function createServerSupabase() {
   const cookieStore = cookies();
+
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name, value, options) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name, options) {
-          cookieStore.set({ name, value: "", ...options });
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Em Server Components, cookies são read-only.
+            // A renovação da sessão é tratada no middleware.
+          }
         }
       }
     }
