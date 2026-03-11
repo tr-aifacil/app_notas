@@ -4,9 +4,9 @@ export type Database = {
   public: {
     Tables: {
       patient: {
-        Row: { id: string; internal_code: string; created_at: string };
-        Insert: { id?: string; internal_code: string; created_at?: string };
-        Update: Partial<{ id: string; internal_code: string; created_at: string }>;
+        Row: { id: string; name: string; internal_code: string; created_at: string };
+        Insert: { id?: string; name: string; internal_code: string; created_at?: string };
+        Update: Partial<{ id: string; name: string; internal_code: string; created_at: string }>;
       };
       episode_of_care: {
         Row: {

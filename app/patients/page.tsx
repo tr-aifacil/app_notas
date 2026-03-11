@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-type Patient = { id: string; internal_code: string };
+type Patient = { id: string; internal_code: string; name: string };
 type Clinician = { id: string; display_name: string };
 
 export default function PatientsPage() {
@@ -12,6 +12,7 @@ export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [clinicians, setClinicians] = useState<Clinician[]>([]);
   const [selectedClinicianId, setSelectedClinicianId] = useState<string>("");
+  const [name, setName] = useState("");
   const [internalCode, setInternalCode] = useState("");
 
   const loadClinicians = useCallback(async () => {
@@ -28,7 +29,7 @@ export default function PatientsPage() {
     if (!selectedClinicianId) {
       const { data } = await supabase
         .from("patient")
-        .select("id, internal_code")
+        .select("id, name, internal_code")
         .order("created_at", { ascending: false });
 
       setPatients(data || []);
@@ -55,7 +56,7 @@ export default function PatientsPage() {
 
     const { data: filteredPatients } = await supabase
       .from("patient")
-      .select("id, internal_code")
+      .select("id, name, internal_code")
       .in("id", patientIds)
       .order("created_at", { ascending: false });
 
@@ -72,8 +73,9 @@ export default function PatientsPage() {
 
   const createPatient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!internalCode.trim()) return;
-    await supabase.from("patient").insert({ internal_code: internalCode.trim() });
+    if (!name.trim() || !internalCode.trim()) return;
+    await supabase.from("patient").insert({ name: name.trim(), internal_code: internalCode.trim() });
+    setName("");
     setInternalCode("");
     loadPatients();
   };
@@ -92,6 +94,7 @@ export default function PatientsPage() {
 
       <div className="card mb-4">
         <form onSubmit={createPatient} className="flex gap-2">
+          <input className="input" placeholder="Nome interno" value={name} onChange={(e) => setName(e.target.value)} required />
           <input className="input" placeholder="Código interno (ex: PT-0001)" value={internalCode} onChange={(e) => setInternalCode(e.target.value)} required />
           <button className="btn-primary" type="submit">Criar</button>
         </form>
@@ -119,7 +122,7 @@ export default function PatientsPage() {
         <ul className="space-y-2">
           {patients.map((p) => (
             <li key={p.id} className="flex items-center justify-between border-b pb-2">
-              <span>{p.internal_code}</span>
+              <span>{p.name} <span className="text-sm text-slate-500">({p.internal_code})</span></span>
               <Link className="text-blue-600 hover:underline" href={`/patients/${p.id}`}>Ver detalhe</Link>
             </li>
           ))}

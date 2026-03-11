@@ -19,7 +19,7 @@ export default async function PatientDetail({ params }: { params: { patientId: s
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BackButton fallbackHref="/patients" />
-          <h1 className="text-xl font-semibold">Paciente: {patient?.internal_code}</h1>
+          <h1 className="text-xl font-semibold">Paciente: {patient?.name} <span className="text-base font-normal text-slate-500">({patient?.internal_code})</span></h1>
         </div>
         <Link className="btn-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
       </div>
