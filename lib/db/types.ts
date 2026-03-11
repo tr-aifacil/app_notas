@@ -21,7 +21,7 @@ export type Database = {
       };
       session: {
         Row: {
-          id: string; episode_id: string; date: string; clinician: string; type: "avaliacao" | "tratamento" | "reavaliacao" | "alta";
+          id: string; episode_id: string; date: string; clinician: string | null; clinician_id: string | null; type: "avaliacao" | "tratamento" | "reavaliacao" | "alta";
           subjective: string; objective: string; clinical_analysis: string; intervention: string; response: string; plan: string;
           subjective_transcript: string; objective_transcript: string; clinical_analysis_transcript: string;
           intervention_transcript: string; response_transcript: string; plan_transcript: string; created_at: string;
