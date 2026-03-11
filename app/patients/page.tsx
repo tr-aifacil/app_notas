@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import AuthHeader from "@/components/AuthHeader";
 
 type Patient = { id: string; internal_code: string; name: string };
 type Clinician = { id: string; display_name: string };
@@ -90,10 +91,6 @@ export default function PatientsPage() {
     loadPatients();
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    location.href = "/login";
-  };
 
   return (
     <main className="container-page space-y-4">
@@ -163,5 +160,6 @@ export default function PatientsPage() {
         </section>
       </div>
     </main>
+    </>
   );
 }

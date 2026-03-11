@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import PwaRegister from "@/components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "Registo Clínico Interno",
-  description: "MVP fisioterapia músculo-esquelética"
+  title: "Espaço N Saúde | Registo Clínico",
+  description: "Plataforma clínica Espaço N Saúde para gestão de pacientes, episódios e sessões"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

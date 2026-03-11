@@ -28,7 +28,7 @@ export default function DeleteEpisodeButton({ episodeId, patientId }: { episodeI
 
   return (
     <span className="flex items-center gap-2">
-      <span className="text-sm text-red-600">Tem a certeza?</span>
+      <span className="text-sm text-state-error">Tem a certeza?</span>
       <button
         className="rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
         onClick={deleteEpisode}

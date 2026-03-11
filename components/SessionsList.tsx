@@ -44,7 +44,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
       {sessions.map((s) => (
         <li key={s.id} className="rounded-md border border-slate-200 px-3 py-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-slate-700">
+            <span className="text-brand-foreground">
               {new Date(s.date).toLocaleString("pt-PT")} — {s.type} — {s.clinician}
             </span>
             <div className="flex flex-wrap items-center gap-2">
@@ -91,12 +91,12 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
           </div>
 
           {expandedId === s.id && (
-            <div className="mt-3 space-y-2 rounded bg-slate-50 p-3">
+            <div className="mt-3 space-y-2 rounded bg-brand-bg p-3">
               {sectionLabels.map(({ key, label }) =>
                 s[key] ? (
                   <div key={key}>
-                    <p className="font-medium text-slate-600">{label}</p>
-                    <p className="whitespace-pre-wrap text-slate-800">{s[key] as string}</p>
+                    <p className="font-medium text-brand-muted">{label}</p>
+                    <p className="whitespace-pre-wrap text-brand-foreground">{s[key] as string}</p>
                   </div>
                 ) : null
               )}

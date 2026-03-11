@@ -53,10 +53,10 @@ export default function EpisodeStatusEditor({ episodeId, initialStatus, initialE
         />
       </div>
       <div className="flex items-center gap-2 pb-1">
-        <button className="btn-primary" onClick={save} disabled={saving} type="button">
+        <button className="btn-brand-primary" onClick={save} disabled={saving} type="button">
           {saving ? "A guardar..." : "Guardar episódio"}
         </button>
-        {saved && <span className="text-sm text-green-600">✓ Guardado</span>}
+        {saved && <span className="text-sm text-state-success">✓ Guardado</span>}
       </div>
     </div>
   );

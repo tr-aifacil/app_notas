@@ -32,7 +32,7 @@ export default function LoginPage() {
             <label className="label">Password</label>
             <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
-          <button className="btn-primary w-full" type="submit">Entrar</button>
+          <button className="btn-brand-primary w-full" type="submit">Entrar</button>
         </form>
         {msg && <p className="mt-3 text-sm text-red-600">{msg}</p>}
         <p className="mt-3 text-sm text-center">
