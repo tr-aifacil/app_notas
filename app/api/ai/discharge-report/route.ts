@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminSupabase, createServerSupabase } from "@/lib/supabase/server";
 import { generateDischargeReport } from "@/lib/reports/generateDischargeReport";
 import { evaluateAlerts } from "@/lib/alerts/evaluateAlerts";
+import { Database } from "@/lib/db/types";
 
 export const runtime = "nodejs";
 
@@ -17,14 +18,16 @@ export async function POST(req: Request) {
     await evaluateAlerts(episode_id);
 
     const supabase = createAdminSupabase();
-    const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();
-    const { data: patient } = episode
+    const { data: episodeData } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();
+    const episode = (episodeData as Database["public"]["Tables"]["episode_of_care"]["Row"] | null) || null;
+    const { data: patientData } = episode
       ? await supabase
           .from("patient")
           .select("internal_code")
           .eq("id", episode.patient_id)
           .single()
       : { data: null };
+    const patient = (patientData as Pick<Database["public"]["Tables"]["patient"]["Row"], "internal_code"> | null) || null;
     const { data: sessions } = await supabase.from("session").select("*").eq("episode_id", episode_id).order("date", { ascending: true });
     const { data: scales } = await supabase.from("scale_result").select("*").eq("episode_id", episode_id).order("applied_at", { ascending: true });
 

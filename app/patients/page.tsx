@@ -45,8 +45,13 @@ export default function PatientsPage() {
 
     const patientIds = Array.from(
       new Set(
-        (sessions || [])
-          .map((session) => session.episode_of_care?.patient_id)
+        ((sessions as Array<{ episode_of_care: { patient_id: string } | { patient_id: string }[] | null }> | null) || [])
+          .map((session) => {
+            if (!session.episode_of_care) return null;
+            return Array.isArray(session.episode_of_care)
+              ? session.episode_of_care[0]?.patient_id
+              : session.episode_of_care.patient_id;
+          })
           .filter((id): id is string => Boolean(id))
       )
     );

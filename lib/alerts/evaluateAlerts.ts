@@ -38,17 +38,20 @@ async function addAlertIfNotRecent(episodeId: string, ruleCode: string, message:
 export async function evaluateAlerts(episodeId: string) {
   const supabase = createAdminSupabase();
 
-  const { data: scales = [] } = await supabase
+  const { data: scalesData } = await supabase
     .from("scale_result")
     .select("*")
     .eq("episode_id", episodeId)
     .order("applied_at", { ascending: true });
 
-  const { data: sessions = [] } = await supabase
+  const { data: sessionsData } = await supabase
     .from("session")
     .select("*")
     .eq("episode_id", episodeId)
     .order("date", { ascending: true });
+
+  const scales = (scalesData as Array<{ type: string; value: number; applied_at: string }> | null) || [];
+  const sessions = (sessionsData as Array<{ type: string; plan: string }> | null) || [];
 
   const byType = new Map<string, typeof scales>();
   for (const s of scales) {

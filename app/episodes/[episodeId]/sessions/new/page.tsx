@@ -35,10 +35,21 @@ export default function NewSessionPage() {
   useEffect(() => {
     const loadCurrentUser = async () => {
       const { data } = await supabase.auth.getUser();
-      if (data.user?.id) setClinicianId(data.user.id);
+      if (!data.user?.id) return;
+      setClinicianId(data.user.id);
+
+      const { data: profile } = await supabase
+        .from("profile")
+        .select("display_name")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profile?.display_name) {
+        setClinician(profile.display_name);
+      }
     };
     loadCurrentUser();
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const save = async () => {
     const { data } = await supabase
