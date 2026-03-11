@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import BackButton from "@/components/BackButton";
+import StatusBadge from "@/components/StatusBadge";
 
 export default async function PatientDetail({ params }: { params: { patientId: string } }) {
   const supabase = createServerSupabase();
@@ -12,28 +13,50 @@ export default async function PatientDetail({ params }: { params: { patientId: s
     .order("start_date", { ascending: false });
 
   return (
-    <main className="container-page">
-      <div className="mb-2">
+    <main className="container-page space-y-4">
+      <div>
         <Link className="text-sm text-slate-500 hover:text-slate-700" href="/patients">← Voltar</Link>
       </div>
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BackButton fallbackHref="/patients" />
-          <h1 className="text-xl font-semibold">Paciente: {patient?.name} <span className="text-base font-normal text-slate-500">({patient?.internal_code})</span></h1>
-        </div>
-        <Link className="btn-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
-      </div>
 
-      <div className="card">
+      <section className="card">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <BackButton fallbackHref="/patients" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-base font-semibold text-blue-700">
+              {patient?.name?.charAt(0)?.toUpperCase() || "P"}
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Código {patient?.internal_code}</p>
+              <h1 className="text-xl font-semibold text-slate-900">{patient?.name}</h1>
+              <p className="text-sm text-slate-600">Resumo de episódios clínicos e evolução terapêutica.</p>
+            </div>
+          </div>
+          <Link className="btn-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
+        </div>
+      </section>
+
+      <section className="card space-y-3">
+        <div className="flex items-center justify-between border-b pb-3">
+          <h2 className="text-lg font-semibold">Episódios clínicos</h2>
+          <span className="text-sm text-slate-600">{(episodes || []).length} episódios</span>
+        </div>
         <ul className="space-y-2">
-          {(episodes || []).map((e) => (
-            <li key={e.id} className="flex items-center justify-between border-b pb-2">
-              <span>{e.title} — {e.profession} / {e.area} — {e.status}</span>
-              <Link className="text-blue-600 hover:underline" href={`/episodes/${e.id}`}>Abrir</Link>
+          {(episodes || []).map((episode) => (
+            <li key={episode.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2">
+              <div>
+                <p className="text-sm font-medium text-slate-900">{episode.title}</p>
+                <p className="text-xs text-slate-600">{episode.profession} / {episode.area}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusBadge status={episode.status} />
+                <Link className="btn-secondary px-3 py-1.5 text-xs" href={`/episodes/${episode.id}`}>Detalhes</Link>
+                <Link className="btn-secondary px-3 py-1.5 text-xs" href={`/episodes/${episode.id}#estado`}>Editar</Link>
+              </div>
             </li>
           ))}
+          {episodes?.length === 0 && <li className="text-sm text-slate-500">Sem episódios registados.</li>}
         </ul>
-      </div>
+      </section>
     </main>
   );
 }

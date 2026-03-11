@@ -42,36 +42,36 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
   return (
     <ul className="space-y-2">
       {sessions.map((s) => (
-        <li key={s.id} className="border-b pb-3 text-sm">
+        <li key={s.id} className="rounded-md border border-slate-200 px-3 py-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-slate-700">
               {new Date(s.date).toLocaleString("pt-PT")} — {s.type} — {s.clinician}
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                className="btn-secondary py-1 px-2 text-xs"
+                className="btn-secondary px-3 py-1.5 text-xs"
                 onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
                 type="button"
               >
-                {expandedId === s.id ? "Fechar" : "Ver"}
+                {expandedId === s.id ? "Fechar" : "Detalhes"}
               </button>
               <Link
-                className="btn-secondary py-1 px-2 text-xs"
+                className="btn-secondary px-3 py-1.5 text-xs"
                 href={`/episodes/${episodeId}/sessions/${s.id}/edit`}
               >
                 Editar
               </Link>
               {confirmDeleteId === s.id ? (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-2">
                   <button
-                    className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                    className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
                     onClick={() => deleteSession(s.id)}
                     type="button"
                   >
                     Confirmar
                   </button>
                   <button
-                    className="btn-secondary py-1 px-2 text-xs"
+                    className="btn-secondary px-3 py-1.5 text-xs"
                     onClick={() => setConfirmDeleteId(null)}
                     type="button"
                   >
@@ -80,7 +80,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
                 </span>
               ) : (
                 <button
-                  className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                  className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
                   onClick={() => setConfirmDeleteId(s.id)}
                   type="button"
                 >
@@ -104,6 +104,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
           )}
         </li>
       ))}
+      {sessions.length === 0 && <li className="text-sm text-slate-500">Sem sessões registadas.</li>}
     </ul>
   );
 }
