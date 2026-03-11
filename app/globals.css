@@ -7,7 +7,7 @@
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply bg-brand-bg text-brand-foreground;
 }
 
 .container-page {
@@ -15,25 +15,42 @@ body {
 }
 
 .card {
-  @apply rounded-lg border bg-white p-4 shadow-sm;
+  @apply rounded-lg border border-brand-border bg-brand-surface p-4 shadow-sm;
 }
 
 .btn {
-  @apply rounded-md px-3 py-2 text-sm font-medium;
+  @apply rounded-md px-3 py-2 text-sm font-medium transition-colors;
 }
 
-.btn-primary {
-  @apply btn bg-blue-600 text-white hover:bg-blue-700;
+.btn-brand-primary {
+  @apply btn bg-brand-primary text-white hover:bg-brand-primary-strong;
 }
 
-.btn-secondary {
-  @apply btn bg-slate-200 text-slate-900 hover:bg-slate-300;
+.btn-brand-secondary {
+  @apply btn bg-brand-secondary text-brand-primary hover:bg-brand-secondary-strong;
+}
+
+.btn-state-danger {
+  @apply btn bg-state-error text-white hover:bg-state-error-strong;
+}
+
+.btn-state-danger-outline {
+  @apply btn border border-state-error/40 bg-white text-state-error hover:bg-state-error-soft;
 }
 
 .input {
-  @apply w-full rounded-md border border-slate-300 px-3 py-2 text-sm;
+  @apply w-full rounded-md border border-brand-border px-3 py-2 text-sm text-brand-foreground focus:border-brand-primary focus:outline-none;
 }
 
 .label {
-  @apply mb-1 block text-sm font-medium text-slate-700;
+  @apply mb-1 block text-sm font-medium text-brand-muted;
 }
+
+.link-brand {
+  @apply text-brand-primary hover:text-brand-primary-strong hover:underline;
+}
+
+.link-brand-muted {
+  @apply text-sm text-brand-muted hover:text-brand-foreground;
+}
+

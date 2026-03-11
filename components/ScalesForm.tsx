@@ -44,7 +44,7 @@ export default function ScalesForm({ episodeId, sessionId }: { episodeId: string
         <input className="input" type="number" value={value} onChange={(e) => setValue(e.target.value)} required />
         <input className="input" type="date" value={appliedAt} onChange={(e) => setAppliedAt(e.target.value)} required />
       </div>
-      <button className="btn-primary" type="submit">Guardar escala</button>
+      <button className="btn-brand-primary" type="submit">Guardar escala</button>
       {msg && <p className="text-sm">{msg}</p>}
     </form>
   );

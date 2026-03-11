@@ -79,7 +79,7 @@ export default function UpdatePasswordPage() {
                 required
               />
             </div>
-            <button className="btn-primary w-full" type="submit" disabled={loading}>
+            <button className="btn-brand-primary w-full" type="submit" disabled={loading}>
               {loading ? "A guardar..." : "Guardar password"}
             </button>
           </form>

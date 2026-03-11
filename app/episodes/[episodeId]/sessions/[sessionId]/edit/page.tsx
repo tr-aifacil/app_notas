@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
 import BackButton from "@/components/BackButton";
+import AuthHeader from "@/components/AuthHeader";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 
@@ -100,10 +101,12 @@ export default function EditSessionPage() {
       .eq("id", params.sessionId);
   };
 
-  if (loading) return <main className="container-page"><p className="text-slate-500">A carregar...</p></main>;
+  if (loading) return <main className="container-page"><p className="text-brand-muted">A carregar...</p></main>;
 
   return (
-    <main className="container-page space-y-4">
+    <>
+      <AuthHeader />
+      <main className="container-page space-y-4">
       <div className="flex items-center gap-2">
         <BackButton fallbackHref={`/episodes/${params.episodeId}`} />
         <h1 className="text-2xl font-semibold">Editar Sessão</h1>
@@ -144,10 +147,10 @@ export default function EditSessionPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 pt-1">
-          <button className="btn-primary" onClick={saveGeneral} disabled={savingGeneral} type="button">
+          <button className="btn-brand-primary" onClick={saveGeneral} disabled={savingGeneral} type="button">
             {savingGeneral ? "A guardar..." : "Guardar dados gerais"}
           </button>
-          {savedGeneral && <span className="text-sm text-green-600">✓ Guardado</span>}
+          {savedGeneral && <span className="text-sm text-state-success">✓ Guardado</span>}
         </div>
       </div>
 
@@ -165,6 +168,7 @@ export default function EditSessionPage() {
       ))}
 
       <div className="pb-6" />
-    </main>
+      </main>
+    </>
   );
 }

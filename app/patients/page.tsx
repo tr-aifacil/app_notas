@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import AuthHeader from "@/components/AuthHeader";
 
 type Patient = { id: string; internal_code: string; name: string };
 type Clinician = { id: string; display_name: string };
@@ -80,23 +81,19 @@ export default function PatientsPage() {
     loadPatients();
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    location.href = "/login";
-  };
 
   return (
+    <><AuthHeader />
     <main className="container-page">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Pacientes</h1>
-        <button onClick={logout} className="btn-secondary">Logout</button>
+        <h1 className="text-2xl font-semibold text-brand-primary">Pacientes</h1>
       </div>
 
       <div className="card mb-4">
         <form onSubmit={createPatient} className="flex gap-2">
           <input className="input" placeholder="Nome interno" value={name} onChange={(e) => setName(e.target.value)} required />
           <input className="input" placeholder="Código interno (ex: PT-0001)" value={internalCode} onChange={(e) => setInternalCode(e.target.value)} required />
-          <button className="btn-primary" type="submit">Criar</button>
+          <button className="btn-brand-primary" type="submit">Criar</button>
         </form>
       </div>
 
@@ -122,12 +119,13 @@ export default function PatientsPage() {
         <ul className="space-y-2">
           {patients.map((p) => (
             <li key={p.id} className="flex items-center justify-between border-b pb-2">
-              <span>{p.name} <span className="text-sm text-slate-500">({p.internal_code})</span></span>
-              <Link className="text-blue-600 hover:underline" href={`/patients/${p.id}`}>Ver detalhe</Link>
+              <span>{p.name} <span className="text-sm text-brand-muted">({p.internal_code})</span></span>
+              <Link className="link-brand" href={`/patients/${p.id}`}>Ver detalhe</Link>
             </li>
           ))}
         </ul>
       </div>
     </main>
+    </>
   );
 }

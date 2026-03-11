@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import BackButton from "@/components/BackButton";
+import AuthHeader from "@/components/AuthHeader";
 
 export default function NewEpisodePage() {
   const supabase = createClient();
@@ -34,9 +35,11 @@ export default function NewEpisodePage() {
   };
 
   return (
-    <main className="container-page max-w-xl">
+    <>
+      <AuthHeader />
+      <main className="container-page max-w-xl">
       <div className="mb-2">
-        <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/patients/${params.patientId}`}>← Voltar</Link>
+        <Link className="link-brand-muted" href={`/patients/${params.patientId}`}>← Voltar</Link>
       </div>
       <div className="card">
         <div className="mb-4 flex items-center gap-2">
@@ -48,9 +51,10 @@ export default function NewEpisodePage() {
           <div><label className="label">Profissão</label><input className="input" value={profession} onChange={(e) => setProfession(e.target.value)} required /></div>
           <div><label className="label">Área</label><input className="input" value={area} onChange={(e) => setArea(e.target.value)} required /></div>
           <div><label className="label">Data início</label><input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required /></div>
-          <button className="btn-primary" type="submit">Criar episódio</button>
+          <button className="btn-brand-primary" type="submit">Criar episódio</button>
         </form>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
