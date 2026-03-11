@@ -10,6 +10,7 @@ import SessionsList from "@/components/SessionsList";
 import DeleteEpisodeButton from "@/components/DeleteEpisodeButton";
 import EpisodeStatusEditor from "@/components/EpisodeStatusEditor";
 import StatusBadge from "@/components/StatusBadge";
+import EpisodeMetadataEditor from "@/components/EpisodeMetadataEditor";
 
 export default async function EpisodePage({ params }: { params: { episodeId: string } }) {
   const supabase = createServerSupabase();
@@ -48,10 +49,19 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
           </div>
         </div>
         {episode && (
+          <EpisodeMetadataEditor
+            episodeId={episode.id}
+            initialTitle={episode.title}
+            initialEpisodeLabel={episode.episode_label}
+          />
+        )}
+        {episode && (
           <EpisodeStatusEditor
             episodeId={episode.id}
             initialStatus={episode.status as "ativo" | "alta" | "administrativo"}
             initialEndDate={episode.end_date ?? null}
+            initialOutcomeStatus={episode.outcome_status}
+            initialOutcomeDate={episode.outcome_date ?? null}
           />
         )}
       </section>

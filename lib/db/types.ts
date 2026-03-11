@@ -10,12 +10,18 @@ export type Database = {
       };
       episode_of_care: {
         Row: {
-          id: string; patient_id: string; title: string; profession: string; area: string;
-          start_date: string; end_date: string | null; status: "ativo" | "alta" | "administrativo"; created_at: string;
+          id: string; patient_id: string; title: string; episode_label: string | null; profession: string; area: string;
+          start_date: string; end_date: string | null; status: "ativo" | "alta" | "administrativo";
+          outcome_status: "ongoing" | "recovered" | "dropout" | "referred_out" | "administrative_close" | "unknown";
+          outcome_date: string | null;
+          created_at: string;
         };
         Insert: {
-          id?: string; patient_id: string; title?: string; profession: string; area: string;
-          start_date: string; end_date?: string | null; status?: "ativo" | "alta" | "administrativo"; created_at?: string;
+          id?: string; patient_id: string; title?: string; episode_label?: string | null; profession: string; area: string;
+          start_date: string; end_date?: string | null; status?: "ativo" | "alta" | "administrativo";
+          outcome_status?: "ongoing" | "recovered" | "dropout" | "referred_out" | "administrative_close" | "unknown";
+          outcome_date?: string | null;
+          created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["episode_of_care"]["Row"]>;
       };
@@ -58,6 +64,10 @@ export type Database = {
         Insert: { id: string; display_name: string; role?: "admin" | "clinician"; created_at?: string };
         Update: Partial<{ id: string; display_name: string; role: "admin" | "clinician"; created_at: string }>;
       };
+    };
+    Views: {
+      admin_episode_metrics_v1: { Row: Record<string, unknown> };
+      admin_data_quality_v1: { Row: Record<string, unknown> };
     };
   };
 };

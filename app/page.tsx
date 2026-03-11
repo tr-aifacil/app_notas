@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { requireUserProfile } from "@/lib/auth/guards";
 
 export default async function HomePage() {
-  const supabase = createServerSupabase();
-  const { data } = await supabase.auth.getUser();
+  const user = await requireUserProfile();
 
-  if (data.user) redirect("/patients");
-  redirect("/login");
+  if (user.profile.role === "admin") {
+    redirect("/admin");
+  }
+
+  redirect("/patients");
 }
