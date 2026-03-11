@@ -46,14 +46,14 @@ export default function DischargeReportEditor({
     <div className="card space-y-3">
       <h3 className="text-lg font-semibold">Relatório de Alta (versionado)</h3>
       <div className="flex gap-2">
-        <button className="btn-primary" onClick={generate}>Gerar Relatório de Alta</button>
+        <button className="btn-brand-primary" onClick={generate}>Gerar Relatório de Alta</button>
       </div>
       <textarea className="input min-h-64" value={content} onChange={(e) => setContent(e.target.value)} />
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={isFinal} onChange={(e) => setIsFinal(e.target.checked)} />
         Marcar como final
       </label>
-      <button className="btn-secondary" onClick={saveVersion}>Guardar nova versão</button>
+      <button className="btn-brand-secondary" onClick={saveVersion}>Guardar nova versão</button>
 
       <div>
         <p className="mb-2 text-sm font-medium">Versões:</p>

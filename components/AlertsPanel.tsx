@@ -33,9 +33,9 @@ export default function AlertsPanel({ alerts, userName }: { alerts: Alert[]; use
           <li key={a.id} className="rounded border p-2">
             <p className="text-sm font-medium">{a.rule_code}</p>
             <p className="text-sm">{a.message}</p>
-            <p className="text-xs text-slate-500">{new Date(a.created_at).toLocaleString("pt-PT")}</p>
+            <p className="text-xs text-brand-muted">{new Date(a.created_at).toLocaleString("pt-PT")}</p>
             {!a.dismissed && (
-              <button className="btn-secondary mt-2" onClick={() => dismiss(a.id)}>Ignorar</button>
+              <button className="btn-brand-secondary mt-2" onClick={() => dismiss(a.id)}>Ignorar</button>
             )}
           </li>
         ))}

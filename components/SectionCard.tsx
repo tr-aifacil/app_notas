@@ -118,13 +118,13 @@ export default function SectionCard(props: Props) {
       <h3 className="text-lg font-semibold">{props.title}</h3>
       <div className="flex gap-2">
         {!isRecording ? (
-          <button className="btn-secondary" onClick={startRecord} type="button" disabled={busy}>Gravar</button>
+          <button className="btn-brand-secondary" onClick={startRecord} type="button" disabled={busy}>Gravar</button>
         ) : (
-          <button className="btn-secondary" onClick={stopRecordAndTranscribe} type="button" disabled={busy}>Parar</button>
+          <button className="btn-brand-secondary" onClick={stopRecordAndTranscribe} type="button" disabled={busy}>Parar</button>
         )}
-        <button className="btn-primary" onClick={organize} type="button" disabled={busy}>Organizar com AI</button>
+        <button className="btn-brand-primary" onClick={organize} type="button" disabled={busy}>Organizar com AI</button>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-state-error">{error}</p>}
 
       <div>
         <label className="label">Transcrição (editável)</label>
@@ -139,7 +139,7 @@ export default function SectionCard(props: Props) {
       {props.onSave && (
         <div className="flex items-center gap-3 pt-1">
           <button
-            className="btn-secondary"
+            className="btn-brand-secondary"
             type="button"
             disabled={saving || busy}
             onClick={async () => {
@@ -155,7 +155,7 @@ export default function SectionCard(props: Props) {
           >
             {saving ? "A guardar..." : "Guardar secção"}
           </button>
-          {saved && <span className="text-sm text-green-600">✓ Guardado</span>}
+          {saved && <span className="text-sm text-state-success">✓ Guardado</span>}
         </div>
       )}
     </div>

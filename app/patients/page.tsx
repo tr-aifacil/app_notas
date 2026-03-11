@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import AuthHeader from "@/components/AuthHeader";
 
 type Patient = { id: string; internal_code: string; name: string };
 type Clinician = { id: string; display_name: string };
@@ -82,6 +83,15 @@ export default function PatientsPage() {
     loadPatients();
   }, [loadPatients]);
 
+  const filteredPatients = useMemo(() => {
+    const normalized = search.trim().toLowerCase();
+    if (!normalized) return patients;
+
+    return patients.filter((patient) =>
+      `${patient.name} ${patient.internal_code}`.toLowerCase().includes(normalized)
+    );
+  }, [patients, search]);
+
   const createPatient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !internalCode.trim()) return;
@@ -91,10 +101,6 @@ export default function PatientsPage() {
     loadPatients();
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    location.href = "/login";
-  };
 
   const contextTitle = useMemo(() => {
     if (selectedScope === "mine") return "Meus Pacientes";
@@ -103,8 +109,8 @@ export default function PatientsPage() {
   }, [selectedClinicianId, selectedScope]);
 
   return (
-    <main className="container-page">
-      <div className="mb-4 flex items-center justify-between">
+    <main className="container-page space-y-4">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Pacientes</h1>
         <button onClick={logout} className="btn-secondary">Logout</button>
       </div>
@@ -188,5 +194,6 @@ export default function PatientsPage() {
         )}
       </div>
     </main>
+    </>
   );
 }

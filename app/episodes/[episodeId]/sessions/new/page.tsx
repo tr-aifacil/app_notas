@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
+import AuthHeader from "@/components/AuthHeader";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 const sections: { key: S; title: string }[] = [
@@ -76,9 +77,11 @@ export default function NewSessionPage() {
   };
 
   return (
-    <main className="container-page space-y-4">
+    <>
+      <AuthHeader />
+      <main className="container-page space-y-4">
       <div>
-        <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/episodes/${params.episodeId}`}>← Voltar</Link>
+        <Link className="link-brand-muted" href={`/episodes/${params.episodeId}`}>← Voltar</Link>
       </div>
       <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
 
@@ -111,8 +114,9 @@ export default function NewSessionPage() {
       ))}
 
       <div className="flex justify-end pb-6 pt-2">
-        <button className="btn-primary px-8 py-3 text-lg" onClick={save}>Validar e Guardar</button>
+        <button className="btn-brand-primary px-8 py-3 text-lg" onClick={save}>Validar e Guardar</button>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
