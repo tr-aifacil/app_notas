@@ -28,7 +28,7 @@ export default async function PatientDetail({ params }: { params: { patientId: s
         <ul className="space-y-2">
           {(episodes || []).map((e) => (
             <li key={e.id} className="flex items-center justify-between border-b pb-2">
-              <span>{e.profession} / {e.area} — {e.status}</span>
+              <span>{e.title} — {e.profession} / {e.area} — {e.status}</span>
               <Link className="text-blue-600 hover:underline" href={`/episodes/${e.id}`}>Abrir</Link>
             </li>
           ))}

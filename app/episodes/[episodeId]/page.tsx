@@ -29,7 +29,7 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <BackButton fallbackHref={episode?.patient_id ? `/patients/${episode.patient_id}` : "/patients"} />
-            <h1 className="text-xl font-semibold">Episódio</h1>
+            <h1 className="text-xl font-semibold">{episode?.title || "Episódio"}</h1>
           </div>
           <div className="flex items-center gap-3">
             <Link className="btn-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova sessão</Link>
