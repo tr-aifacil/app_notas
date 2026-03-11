@@ -17,11 +17,11 @@ export default function DeleteEpisodeButton({ episodeId, patientId }: { episodeI
   if (!confirm) {
     return (
       <button
-        className="btn-state-danger-outline py-1 text-sm"
+        className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
         onClick={() => setConfirm(true)}
         type="button"
       >
-        Eliminar episódio
+        Eliminar Episódio
       </button>
     );
   }
@@ -30,14 +30,14 @@ export default function DeleteEpisodeButton({ episodeId, patientId }: { episodeI
     <span className="flex items-center gap-2">
       <span className="text-sm text-state-error">Tem a certeza?</span>
       <button
-        className="btn-state-danger py-1 text-sm"
+        className="rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
         onClick={deleteEpisode}
         type="button"
       >
         Confirmar
       </button>
       <button
-        className="btn-brand-secondary py-1 px-3 text-sm"
+        className="btn-secondary px-3 py-2 text-sm"
         onClick={() => setConfirm(false)}
         type="button"
       >

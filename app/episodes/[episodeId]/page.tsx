@@ -9,6 +9,7 @@ import AuthHeader from "@/components/AuthHeader";
 import SessionsList from "@/components/SessionsList";
 import DeleteEpisodeButton from "@/components/DeleteEpisodeButton";
 import EpisodeStatusEditor from "@/components/EpisodeStatusEditor";
+import StatusBadge from "@/components/StatusBadge";
 
 export default async function EpisodePage({ params }: { params: { episodeId: string } }) {
   const supabase = createServerSupabase();
@@ -28,20 +29,24 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
         <Link className="link-brand-muted" href={`/patients/${episode?.patient_id}`}>← Voltar</Link>
       </div>
 
-      <div className="card">
-        <div className="mb-2 flex items-center justify-between gap-2">
+      <section className="card" id="estado">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <BackButton fallbackHref={episode?.patient_id ? `/patients/${episode.patient_id}` : "/patients"} />
-            <h1 className="text-xl font-semibold">{episode?.title || "Episódio"}</h1>
+            <div>
+              <h1 className="text-xl font-semibold">{episode?.title || "Episódio"}</h1>
+              <p className="text-sm text-slate-600">{episode?.profession} / {episode?.area}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link className="btn-brand-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova sessão</Link>
-            {episode && (
-              <DeleteEpisodeButton episodeId={episode.id} patientId={episode.patient_id} />
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={episode?.status} />
+            {episode?.start_date && (
+              <span className="text-sm text-slate-500">Início: {new Date(episode.start_date).toLocaleDateString("pt-PT")}</span>
             )}
+            <Link className="btn-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova Sessão</Link>
+            {episode && <DeleteEpisodeButton episodeId={episode.id} patientId={episode.patient_id} />}
           </div>
         </div>
-        <p className="text-sm text-brand-muted">{episode?.profession} / {episode?.area}</p>
         {episode && (
           <EpisodeStatusEditor
             episodeId={episode.id}
@@ -49,22 +54,28 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
             initialEndDate={episode.end_date ?? null}
           />
         )}
-      </div>
+      </section>
 
-      <div className="card">
-        <h3 className="mb-2 text-lg font-semibold">Sessões</h3>
-        <SessionsList sessions={sessions || []} episodeId={params.episodeId} />
-      </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <section className="space-y-4">
+          <div className="card">
+            <h3 className="mb-2 text-lg font-semibold">Sessões</h3>
+            <SessionsList sessions={sessions || []} episodeId={params.episodeId} />
+          </div>
 
-      <ScalesForm episodeId={params.episodeId} />
-      <div className="card">
-        <h3 className="mb-2 text-lg font-semibold">Escalas</h3>
-        <ScalesList scales={scales || []} />
-      </div>
+          <ScalesForm episodeId={params.episodeId} />
+          <div className="card">
+            <h3 className="mb-2 text-lg font-semibold">Escalas</h3>
+            <ScalesList scales={scales || []} />
+          </div>
 
-      <AlertsPanel alerts={alerts || []} userName={userData.user?.email || "clinician"} />
-      <DischargeReportEditor episodeId={params.episodeId} reports={reports || []} generatedBy={userData.user?.email || "clinician"} />
-      </main>
-    </>
+          <DischargeReportEditor episodeId={params.episodeId} reports={reports || []} generatedBy={userData.user?.email || "clinician"} />
+        </section>
+
+        <aside className="space-y-4">
+          <AlertsPanel alerts={alerts || []} userName={userData.user?.email || "clinician"} />
+        </aside>
+      </div>
+    </main>
   );
 }

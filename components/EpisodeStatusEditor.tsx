@@ -38,9 +38,9 @@ export default function EpisodeStatusEditor({ episodeId, initialStatus, initialE
           value={status}
           onChange={(e) => { setStatus(e.target.value as Status); setSaved(false); }}
         >
-          <option value="ativo">ativo</option>
-          <option value="alta">alta</option>
-          <option value="administrativo">administrativo</option>
+          <option value="ativo">Ativo</option>
+          <option value="alta">Concluído (Alta)</option>
+          <option value="administrativo">Concluído (Administrativo)</option>
         </select>
       </div>
       <div>
