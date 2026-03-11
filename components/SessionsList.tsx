@@ -92,14 +92,19 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
 
           {expandedId === s.id && (
             <div className="mt-3 space-y-2 rounded bg-brand-bg p-3">
-              {sectionLabels.map(({ key, label }) =>
-                s[key] ? (
+              {sectionLabels.map(({ key, label }) => {
+                const sectionText = s[key];
+                const hasContent = typeof sectionText === "string" && sectionText.trim().length > 0;
+
+                return (
                   <div key={key}>
                     <p className="font-medium text-brand-muted">{label}</p>
-                    <p className="whitespace-pre-wrap text-brand-foreground">{s[key] as string}</p>
+                    <p className="whitespace-pre-wrap text-brand-foreground">
+                      {hasContent ? sectionText : "Sem conteúdo registado."}
+                    </p>
                   </div>
-                ) : null
-              )}
+                );
+              })}
             </div>
           )}
         </li>
