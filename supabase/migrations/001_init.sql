@@ -7,6 +7,7 @@ create type profile_role as enum ('admin', 'clinician');
 
 create table if not exists patient (
   id uuid primary key default gen_random_uuid(),
+  name text not null,
   internal_code text unique not null,
   created_at timestamptz not null default now()
 );

@@ -18,10 +18,25 @@ export async function POST(req: Request) {
 
     const supabase = createAdminSupabase();
     const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();
+    const { data: patient } = episode
+      ? await supabase
+          .from("patient")
+          .select("internal_code")
+          .eq("id", episode.patient_id)
+          .single()
+      : { data: null };
     const { data: sessions } = await supabase.from("session").select("*").eq("episode_id", episode_id).order("date", { ascending: true });
     const { data: scales } = await supabase.from("scale_result").select("*").eq("episode_id", episode_id).order("applied_at", { ascending: true });
 
-    const snapshot = { episode, sessions: sessions || [], scales: scales || [] };
+    const snapshot = {
+      patient: {
+        client_code: patient?.internal_code ?? "Não registado",
+        name: "[NOME_INTERNO_APP]"
+      },
+      episode,
+      sessions: sessions || [],
+      scales: scales || []
+    };
     const content = await generateDischargeReport(snapshot);
 
     const { data: report } = await supabase
