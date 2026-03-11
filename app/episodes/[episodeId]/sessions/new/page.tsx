@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
-import BackButton from "@/components/BackButton";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 const sections: { key: S; title: string }[] = [
@@ -24,6 +23,7 @@ export default function NewSessionPage() {
 
   const [sessionType, setSessionType] = useState<"avaliacao" | "tratamento" | "reavaliacao" | "alta">("tratamento");
   const [clinician, setClinician] = useState("");
+  const [clinicianId, setClinicianId] = useState<string | null>(null);
   const [transcripts, setTranscripts] = useState<Record<S, string>>({
     subjective: "", objective: "", clinical_analysis: "", intervention: "", response: "", plan: ""
   });
@@ -31,13 +31,22 @@ export default function NewSessionPage() {
     subjective: "", objective: "", clinical_analysis: "", intervention: "", response: "", plan: ""
   });
 
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.id) setClinicianId(data.user.id);
+    };
+    loadCurrentUser();
+  }, [supabase.auth]);
+
   const save = async () => {
     const { data } = await supabase
       .from("session")
       .insert({
         episode_id: params.episodeId,
         date: new Date().toISOString(),
-        clinician,
+        clinician: clinician.trim() || null,
+        clinician_id: clinicianId,
         type: sessionType,
         subjective: finalTexts.subjective,
         objective: finalTexts.objective,
@@ -85,7 +94,7 @@ export default function NewSessionPage() {
         </div>
         <div>
           <label className="label">Clínico</label>
-          <input className="input" value={clinician} onChange={(e) => setClinician(e.target.value)} required />
+          <input className="input" value={clinician} onChange={(e) => setClinician(e.target.value)} />
         </div>
       </div>
 

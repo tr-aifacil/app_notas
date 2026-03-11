@@ -25,6 +25,7 @@ export default function EditSessionPage() {
   const [loading, setLoading] = useState(true);
   const [sessionType, setSessionType] = useState<"avaliacao" | "tratamento" | "reavaliacao" | "alta">("tratamento");
   const [clinician, setClinician] = useState("");
+  const [clinicianId, setClinicianId] = useState<string | null>(null);
   const [sessionDate, setSessionDate] = useState("");
   const [transcripts, setTranscripts] = useState<Record<S, string>>({
     subjective: "", objective: "", clinical_analysis: "", intervention: "", response: "", plan: "",
@@ -37,31 +38,35 @@ export default function EditSessionPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from("session")
-        .select("*")
-        .eq("id", params.sessionId)
-        .single();
+      const [{ data: sessionData }, { data: authData }] = await Promise.all([
+        supabase
+          .from("session")
+          .select("*")
+          .eq("id", params.sessionId)
+          .single(),
+        supabase.auth.getUser(),
+      ]);
 
-      if (data) {
-        setSessionType(data.type as typeof sessionType);
-        setClinician(data.clinician ?? "");
-        setSessionDate(data.date ? new Date(data.date).toISOString().slice(0, 10) : "");
+      if (sessionData) {
+        setSessionType(sessionData.type as typeof sessionType);
+        setClinician(sessionData.clinician ?? "");
+        setClinicianId(sessionData.clinician_id ?? authData.user?.id ?? null);
+        setSessionDate(sessionData.date ? new Date(sessionData.date).toISOString().slice(0, 10) : "");
         setTranscripts({
-          subjective: data.subjective_transcript ?? "",
-          objective: data.objective_transcript ?? "",
-          clinical_analysis: data.clinical_analysis_transcript ?? "",
-          intervention: data.intervention_transcript ?? "",
-          response: data.response_transcript ?? "",
-          plan: data.plan_transcript ?? "",
+          subjective: sessionData.subjective_transcript ?? "",
+          objective: sessionData.objective_transcript ?? "",
+          clinical_analysis: sessionData.clinical_analysis_transcript ?? "",
+          intervention: sessionData.intervention_transcript ?? "",
+          response: sessionData.response_transcript ?? "",
+          plan: sessionData.plan_transcript ?? "",
         });
         setFinalTexts({
-          subjective: data.subjective ?? "",
-          objective: data.objective ?? "",
-          clinical_analysis: data.clinical_analysis ?? "",
-          intervention: data.intervention ?? "",
-          response: data.response ?? "",
-          plan: data.plan ?? "",
+          subjective: sessionData.subjective ?? "",
+          objective: sessionData.objective ?? "",
+          clinical_analysis: sessionData.clinical_analysis ?? "",
+          intervention: sessionData.intervention ?? "",
+          response: sessionData.response ?? "",
+          plan: sessionData.plan ?? "",
         });
       }
       setLoading(false);
@@ -74,7 +79,12 @@ export default function EditSessionPage() {
     setSavedGeneral(false);
     await supabase
       .from("session")
-      .update({ type: sessionType, clinician, date: sessionDate ? new Date(sessionDate).toISOString() : undefined })
+      .update({
+        type: sessionType,
+        clinician: clinician.trim() || null,
+        clinician_id: clinicianId,
+        date: sessionDate ? new Date(sessionDate).toISOString() : undefined
+      })
       .eq("id", params.sessionId);
     setSavingGeneral(false);
     setSavedGeneral(true);
