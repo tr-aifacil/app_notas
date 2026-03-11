@@ -160,6 +160,5 @@ export default function PatientsPage() {
         </section>
       </div>
     </main>
-    </>
   );
 }
