@@ -10,11 +10,11 @@ export type Database = {
       };
       episode_of_care: {
         Row: {
-          id: string; patient_id: string; profession: string; area: string;
+          id: string; patient_id: string; title: string; profession: string; area: string;
           start_date: string; end_date: string | null; status: "ativo" | "alta" | "administrativo"; created_at: string;
         };
         Insert: {
-          id?: string; patient_id: string; profession: string; area: string;
+          id?: string; patient_id: string; title?: string; profession: string; area: string;
           start_date: string; end_date?: string | null; status?: "ativo" | "alta" | "administrativo"; created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["episode_of_care"]["Row"]>;
