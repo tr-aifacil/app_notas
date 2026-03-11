@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
                 required
               />
             </div>
-            <button className="btn-primary w-full" type="submit" disabled={loading}>
+            <button className="btn-brand-primary w-full" type="submit" disabled={loading}>
               {loading ? "A enviar..." : "Enviar link de reset"}
             </button>
           </form>

@@ -23,7 +23,7 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
   };
 
   if (scales.length === 0) {
-    return <p className="text-sm text-slate-500">Nenhuma escala registada.</p>;
+    return <p className="text-sm text-brand-muted">Nenhuma escala registada.</p>;
   }
 
   return (
@@ -36,14 +36,14 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
           {confirmDeleteId === s.id ? (
             <span className="flex items-center gap-1">
               <button
-                className="rounded bg-red-600 px-2 py-0.5 text-xs text-white hover:bg-red-700"
+                className="btn-state-danger px-2 py-0.5 text-xs"
                 onClick={() => deleteScale(s.id)}
                 type="button"
               >
                 Confirmar
               </button>
               <button
-                className="btn-secondary py-0.5 px-2 text-xs"
+                className="btn-brand-secondary py-0.5 px-2 text-xs"
                 onClick={() => setConfirmDeleteId(null)}
                 type="button"
               >
@@ -52,7 +52,7 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
             </span>
           ) : (
             <button
-              className="rounded border border-red-300 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50"
+              className="btn-state-danger-outline px-2 py-0.5 text-xs"
               onClick={() => setConfirmDeleteId(s.id)}
               type="button"
             >

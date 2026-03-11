@@ -44,19 +44,19 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
       {sessions.map((s) => (
         <li key={s.id} className="border-b pb-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-slate-700">
+            <span className="text-brand-foreground">
               {new Date(s.date).toLocaleString("pt-PT")} — {s.type} — {s.clinician}
             </span>
             <div className="flex gap-2">
               <button
-                className="btn-secondary py-1 px-2 text-xs"
+                className="btn-brand-secondary py-1 px-2 text-xs"
                 onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
                 type="button"
               >
                 {expandedId === s.id ? "Fechar" : "Ver"}
               </button>
               <Link
-                className="btn-secondary py-1 px-2 text-xs"
+                className="btn-brand-secondary py-1 px-2 text-xs"
                 href={`/episodes/${episodeId}/sessions/${s.id}/edit`}
               >
                 Editar
@@ -64,14 +64,14 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
               {confirmDeleteId === s.id ? (
                 <span className="flex items-center gap-1">
                   <button
-                    className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                    className="btn-state-danger px-2 py-1 text-xs"
                     onClick={() => deleteSession(s.id)}
                     type="button"
                   >
                     Confirmar
                   </button>
                   <button
-                    className="btn-secondary py-1 px-2 text-xs"
+                    className="btn-brand-secondary py-1 px-2 text-xs"
                     onClick={() => setConfirmDeleteId(null)}
                     type="button"
                   >
@@ -80,7 +80,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
                 </span>
               ) : (
                 <button
-                  className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                  className="btn-state-danger-outline px-2 py-1 text-xs"
                   onClick={() => setConfirmDeleteId(s.id)}
                   type="button"
                 >
@@ -91,12 +91,12 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
           </div>
 
           {expandedId === s.id && (
-            <div className="mt-3 space-y-2 rounded bg-slate-50 p-3">
+            <div className="mt-3 space-y-2 rounded bg-brand-bg p-3">
               {sectionLabels.map(({ key, label }) =>
                 s[key] ? (
                   <div key={key}>
-                    <p className="font-medium text-slate-600">{label}</p>
-                    <p className="whitespace-pre-wrap text-slate-800">{s[key] as string}</p>
+                    <p className="font-medium text-brand-muted">{label}</p>
+                    <p className="whitespace-pre-wrap text-brand-foreground">{s[key] as string}</p>
                   </div>
                 ) : null
               )}

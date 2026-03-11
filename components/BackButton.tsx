@@ -20,7 +20,7 @@ export default function BackButton({ fallbackHref, label = "Voltar" }: Props) {
   };
 
   return (
-    <button className="btn-secondary" type="button" onClick={onBack}>
+    <button className="btn-brand-secondary" type="button" onClick={onBack}>
       {label}
     </button>
   );

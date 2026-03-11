@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import BackButton from "@/components/BackButton";
+import AuthHeader from "@/components/AuthHeader";
 
 export default async function PatientDetail({ params }: { params: { patientId: string } }) {
   const supabase = createServerSupabase();
@@ -12,16 +13,18 @@ export default async function PatientDetail({ params }: { params: { patientId: s
     .order("start_date", { ascending: false });
 
   return (
-    <main className="container-page">
+    <>
+      <AuthHeader />
+      <main className="container-page">
       <div className="mb-2">
-        <Link className="text-sm text-slate-500 hover:text-slate-700" href="/patients">← Voltar</Link>
+        <Link className="link-brand-muted" href="/patients">← Voltar</Link>
       </div>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BackButton fallbackHref="/patients" />
-          <h1 className="text-xl font-semibold">Paciente: {patient?.name} <span className="text-base font-normal text-slate-500">({patient?.internal_code})</span></h1>
+          <h1 className="text-xl font-semibold">Paciente: {patient?.name} <span className="text-base font-normal text-brand-muted">({patient?.internal_code})</span></h1>
         </div>
-        <Link className="btn-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
+        <Link className="btn-brand-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
       </div>
 
       <div className="card">
@@ -29,11 +32,12 @@ export default async function PatientDetail({ params }: { params: { patientId: s
           {(episodes || []).map((e) => (
             <li key={e.id} className="flex items-center justify-between border-b pb-2">
               <span>{e.title} — {e.profession} / {e.area} — {e.status}</span>
-              <Link className="text-blue-600 hover:underline" href={`/episodes/${e.id}`}>Abrir</Link>
+              <Link className="link-brand" href={`/episodes/${e.id}`}>Abrir</Link>
             </li>
           ))}
         </ul>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

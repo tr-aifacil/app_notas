@@ -5,6 +5,7 @@ import ScalesList from "@/components/ScalesList";
 import AlertsPanel from "@/components/AlertsPanel";
 import DischargeReportEditor from "@/components/DischargeReportEditor";
 import BackButton from "@/components/BackButton";
+import AuthHeader from "@/components/AuthHeader";
 import SessionsList from "@/components/SessionsList";
 import DeleteEpisodeButton from "@/components/DeleteEpisodeButton";
 import EpisodeStatusEditor from "@/components/EpisodeStatusEditor";
@@ -20,9 +21,11 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
   const { data: reports } = await supabase.from("discharge_report_version").select("*").eq("episode_id", params.episodeId).order("generated_at", { ascending: false });
 
   return (
-    <main className="container-page space-y-4">
+    <>
+      <AuthHeader />
+      <main className="container-page space-y-4">
       <div>
-        <Link className="text-sm text-slate-500 hover:text-slate-700" href={`/patients/${episode?.patient_id}`}>← Voltar</Link>
+        <Link className="link-brand-muted" href={`/patients/${episode?.patient_id}`}>← Voltar</Link>
       </div>
 
       <div className="card">
@@ -32,13 +35,13 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
             <h1 className="text-xl font-semibold">{episode?.title || "Episódio"}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link className="btn-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova sessão</Link>
+            <Link className="btn-brand-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova sessão</Link>
             {episode && (
               <DeleteEpisodeButton episodeId={episode.id} patientId={episode.patient_id} />
             )}
           </div>
         </div>
-        <p className="text-sm text-slate-600">{episode?.profession} / {episode?.area}</p>
+        <p className="text-sm text-brand-muted">{episode?.profession} / {episode?.area}</p>
         {episode && (
           <EpisodeStatusEditor
             episodeId={episode.id}
@@ -61,6 +64,7 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
 
       <AlertsPanel alerts={alerts || []} userName={userData.user?.email || "clinician"} />
       <DischargeReportEditor episodeId={params.episodeId} reports={reports || []} generatedBy={userData.user?.email || "clinician"} />
-    </main>
+      </main>
+    </>
   );
 }
