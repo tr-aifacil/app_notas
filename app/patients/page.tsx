@@ -94,10 +94,7 @@ export default function PatientsPage() {
 
   return (
     <main className="container-page space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Pacientes</h1>
-        <button onClick={logout} className="btn-secondary">Logout</button>
-      </div>
+      <AuthHeader title="Pacientes" />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
         <section className="card h-fit">
