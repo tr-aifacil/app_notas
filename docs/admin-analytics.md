@@ -17,22 +17,28 @@ Operational closure (`status` + `end_date`) and analytics outcome are intentiona
 ## Metric definitions
 - `episode_duration_days` = `coalesce(outcome_date, end_date, current_date) - start_date`
 - `recovery_days` = `outcome_date - start_date` only when `outcome_status = recovered`
+- Recovery KPI cards use episodes with `analytics_included = true` (i.e., `case_type = novo_caso`)
 - `averageRecoveryDays` = arithmetic mean of `recovery_days` in recovered episodes
 - `medianRecoveryDays` = median of `recovery_days` in recovered episodes
 - `averageSessionsPerRecoveredEpisode` = mean session count across recovered episodes
 
-## Backfill policy
-Historical `status = alta` was mapped to `outcome_status = unknown` (not recovered by default).
-Reason: old records do not reliably encode recovery semantics, and auto-promoting to recovered would bias metrics.
+## Classification model
+Structured fields replace free-text labels:
+- `body_region`
+- `condition_type`
+- `condition_chronicity`
+- `case_type`
+- `laterality`
+- `analytics_included`
+- `analytics_label` (auto-built slug)
 
 ## Current limitations
-- `episode_label` is free text and needs human discipline for stable cohorts.
 - Some historical episodes may remain with unknown outcomes or missing outcome dates.
 - Clinician attribution depends on sessions having `clinician_id` set.
 
 ## Data quality signals
 `admin_data_quality_v1` flags quality blockers including:
-- missing title/label
+- missing title / missing structured classification
 - no sessions / no scales
 - closed without outcome
 - outcome without date
@@ -42,7 +48,7 @@ Reason: old records do not reliably encode recovery semantics, and auto-promotin
 
 ## Data entry discipline for future prediction work
 To improve future forecasting readiness:
-1. Always set `episode_label` using consistent terminology.
+1. Keep structured classification fields complete for every episode.
 2. Explicitly set `outcome_status` on closure.
 3. Fill `outcome_date` for closed episodes.
 4. Keep `clinician_id` populated for every session.

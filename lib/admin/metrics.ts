@@ -2,7 +2,12 @@ export type EpisodeMetricRow = {
   episode_id: string;
   patient_id: string;
   title: string;
-  episode_label: string | null;
+  analytics_label: string | null;
+  analytics_included: boolean;
+  case_type: string | null;
+  body_region: string | null;
+  condition_type: string | null;
+  condition_chronicity: string | null;
   profession: string;
   area: string;
   status: "ativo" | "alta" | "administrativo";
@@ -19,7 +24,7 @@ export type DataQualityRow = {
   episode_id: string;
   severity: "ok" | "warning" | "critical";
   missing_title: boolean;
-  missing_episode_label: boolean;
+  missing_structured_classification: boolean;
   no_sessions: boolean;
   no_scales: boolean;
   closed_without_outcome: boolean;
@@ -35,7 +40,7 @@ export type MetricsFilters = {
   profession?: string;
   area?: string;
   clinicianId?: string;
-  episodeLabel?: string;
+  analyticsLabel?: string;
   outcomeStatus?: EpisodeMetricRow["outcome_status"];
   includeOpen?: boolean;
 };
@@ -60,7 +65,7 @@ export function applyFilters(rows: EpisodeMetricRow[], filters: MetricsFilters) 
     if (filters.dateTo && row.start_date > filters.dateTo) return false;
     if (filters.profession && row.profession !== filters.profession) return false;
     if (filters.area && row.area !== filters.area) return false;
-    if (filters.episodeLabel && row.episode_label !== filters.episodeLabel) return false;
+    if (filters.analyticsLabel && row.analytics_label !== filters.analyticsLabel) return false;
     if (filters.outcomeStatus && row.outcome_status !== filters.outcomeStatus) return false;
     if (!filters.includeOpen && row.outcome_status === "ongoing") return false;
     return true;
@@ -71,7 +76,7 @@ export function qualityTopIssues(qualityRows: DataQualityRow[]) {
   const issues = new Map<string, number>();
   const keys: Array<keyof DataQualityRow> = [
     "missing_title",
-    "missing_episode_label",
+    "missing_structured_classification",
     "no_sessions",
     "no_scales",
     "closed_without_outcome",

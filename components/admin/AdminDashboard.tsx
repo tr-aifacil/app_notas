@@ -13,8 +13,8 @@ type MetricsResponse = {
     averageRecoveryDays: number | null;
     averageSessionsPerRecoveredEpisode: number | null;
   };
-  byEpisodeLabel: Array<{
-    episodeLabel: string;
+  byAnalyticsLabel: Array<{
+    analyticsLabel: string;
     count: number;
     recoveredCount: number;
     averageRecoveryDays: number | null;
@@ -44,7 +44,7 @@ type MetricsResponse = {
     episodeId: string;
     patientId: string;
     title: string;
-    episodeLabel: string | null;
+    analyticsLabel: string | null;
     profession: string;
     area: string;
     status: string;
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
     profession: "",
     area: "",
     clinicianId: "",
-    episodeLabel: "",
+    analyticsLabel: "",
     outcomeStatus: "",
     includeOpen: true,
     page: 1,
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
         <input className="input" placeholder="Profissão" value={filters.profession} onChange={(e) => setFilter("profession", e.target.value)} />
         <input className="input" placeholder="Área" value={filters.area} onChange={(e) => setFilter("area", e.target.value)} />
         <input className="input" placeholder="Clinician ID" value={filters.clinicianId} onChange={(e) => setFilter("clinicianId", e.target.value)} />
-        <input className="input" placeholder="Episode label" value={filters.episodeLabel} onChange={(e) => setFilter("episodeLabel", e.target.value)} />
+        <input className="input" placeholder="Analytics label" value={filters.analyticsLabel} onChange={(e) => setFilter("analyticsLabel", e.target.value)} />
         <select className="input" value={filters.outcomeStatus} onChange={(e) => setFilter("outcomeStatus", e.target.value)}>
           <option value="">Todos os outcomes</option>
           <option value="ongoing">ongoing</option>
@@ -148,12 +148,12 @@ export default function AdminDashboard() {
       </section>
 
       <section className="card">
-        <h2 className="mb-2 text-lg font-semibold">Recovery por Episode Label</h2>
+        <h2 className="mb-2 text-lg font-semibold">Recovery por classificação analítica</h2>
         <table className="w-full text-sm">
-          <thead><tr><th>Label</th><th>N</th><th>Recuperados</th><th>Média</th><th>Mediana</th></tr></thead>
+          <thead><tr><th>Classificação</th><th>N</th><th>Recuperados</th><th>Média</th><th>Mediana</th></tr></thead>
           <tbody>
-            {data.byEpisodeLabel.map((row) => (
-              <tr key={row.episodeLabel}><td>{row.episodeLabel}</td><td>{row.count}</td><td>{row.recoveredCount}</td><td>{row.averageRecoveryDays ?? "-"}</td><td>{row.medianRecoveryDays ?? "-"}</td></tr>
+            {data.byAnalyticsLabel.map((row) => (
+              <tr key={row.analyticsLabel}><td>{row.analyticsLabel}</td><td>{row.count}</td><td>{row.recoveredCount}</td><td>{row.averageRecoveryDays ?? "-"}</td><td>{row.medianRecoveryDays ?? "-"}</td></tr>
             ))}
           </tbody>
         </table>
@@ -194,12 +194,12 @@ export default function AdminDashboard() {
       <section className="card">
         <h2 className="mb-2 text-lg font-semibold">Drill-down episódios</h2>
         <table className="w-full text-sm">
-          <thead><tr><th>Título</th><th>Label</th><th>Status</th><th>Outcome</th><th>Sessões</th><th>Recovery</th></tr></thead>
+          <thead><tr><th>Título</th><th>Classificação</th><th>Status</th><th>Outcome</th><th>Sessões</th><th>Recovery</th></tr></thead>
           <tbody>
             {data.rows.map((row) => (
               <tr key={row.episodeId}>
                 <td><Link className="text-blue-700 underline" href={`/episodes/${row.episodeId}`}>{row.title}</Link></td>
-                <td>{row.episodeLabel || "-"}</td><td>{row.status}</td><td>{row.outcomeStatus}</td><td>{row.sessionCount}</td><td>{row.recoveryDays ?? "-"}</td>
+                <td>{row.analyticsLabel || "-"}</td><td>{row.status}</td><td>{row.outcomeStatus}</td><td>{row.sessionCount}</td><td>{row.recoveryDays ?? "-"}</td>
               </tr>
             ))}
           </tbody>

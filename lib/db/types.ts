@@ -10,14 +10,18 @@ export type Database = {
       };
       episode_of_care: {
         Row: {
-          id: string; patient_id: string; title: string; episode_label: string | null; profession: string; area: string;
+          id: string; patient_id: string; title: string; body_region: string | null; condition_type: string | null;
+          condition_chronicity: string | null; case_type: string | null; laterality: string | null;
+          analytics_included: boolean; analytics_label: string | null; profession: string; area: string;
           start_date: string; end_date: string | null; status: "ativo" | "alta" | "administrativo";
           outcome_status: "ongoing" | "recovered" | "dropout" | "referred_out" | "administrative_close" | "unknown";
           outcome_date: string | null;
           created_at: string;
         };
         Insert: {
-          id?: string; patient_id: string; title?: string; episode_label?: string | null; profession: string; area: string;
+          id?: string; patient_id: string; title?: string; body_region?: string | null; condition_type?: string | null;
+          condition_chronicity?: string | null; case_type?: string | null; laterality?: string | null;
+          analytics_included?: boolean; analytics_label?: string | null; profession: string; area: string;
           start_date: string; end_date?: string | null; status?: "ativo" | "alta" | "administrativo";
           outcome_status?: "ongoing" | "recovered" | "dropout" | "referred_out" | "administrative_close" | "unknown";
           outcome_date?: string | null;
