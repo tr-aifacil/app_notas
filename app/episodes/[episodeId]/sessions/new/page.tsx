@@ -8,13 +8,21 @@ import SectionCard from "@/components/SectionCard";
 import AuthHeader from "@/components/AuthHeader";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
-const sections: { key: S; title: string }[] = [
-  { key: "subjective", title: "Avaliação Subjetiva" },
-  { key: "objective", title: "Avaliação Objetiva" },
-  { key: "clinical_analysis", title: "Análise Clínica" },
-  { key: "intervention", title: "Intervenção" },
-  { key: "response", title: "Resposta" },
-  { key: "plan", title: "Plano" }
+const sections: { key: S; title: string; description?: string }[] = [
+  { key: "subjective", title: "Avaliação Subjetiva", description: "Registo da informação subjetiva reportada pelo utente" },
+  { key: "objective", title: "Avaliação Objetiva", description: "Registo dos achados objetivos observados na avaliação" },
+  { key: "clinical_analysis", title: "Análise Clínica", description: "Interpretação clínica dos achados e enquadramento do caso" },
+  { key: "intervention", title: "Intervenção", description: "Registo do tratamento realizado na sessão" },
+  {
+    key: "response",
+    title: "Resposta",
+    description: "Registo da resposta do utente à sessão, durante a sessão ou em follow-up"
+  },
+  {
+    key: "plan",
+    title: "Plano",
+    description: "Registo do plano para as próximas sessões, incluindo progressão de carga ou ajustes de intervenção"
+  }
 ];
 
 export default function NewSessionPage() {
@@ -22,15 +30,20 @@ export default function NewSessionPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionType, setSessionType] = useState<"avaliacao" | "tratamento" | "reavaliacao" | "alta">("tratamento");
   const [clinician, setClinician] = useState("");
   const [clinicianId, setClinicianId] = useState<string | null>(null);
+  const [sessionDate, setSessionDate] = useState(new Date().toISOString().slice(0, 10));
   const [transcripts, setTranscripts] = useState<Record<S, string>>({
     subjective: "", objective: "", clinical_analysis: "", intervention: "", response: "", plan: ""
   });
   const [finalTexts, setFinalTexts] = useState<Record<S, string>>({
     subjective: "", objective: "", clinical_analysis: "", intervention: "", response: "", plan: ""
   });
+  const [savingGeneral, setSavingGeneral] = useState(false);
+  const [savedGeneral, setSavedGeneral] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -51,12 +64,14 @@ export default function NewSessionPage() {
     loadCurrentUser();
   }, [supabase]);
 
-  const save = async () => {
-    const { data } = await supabase
+  const ensureSession = async () => {
+    if (sessionId) return sessionId;
+
+    const { data, error } = await supabase
       .from("session")
       .insert({
         episode_id: params.episodeId,
-        date: new Date().toISOString(),
+        date: sessionDate ? new Date(sessionDate).toISOString() : new Date().toISOString(),
         clinician: clinician.trim() || null,
         clinician_id: clinicianId,
         type: sessionType,
@@ -76,14 +91,66 @@ export default function NewSessionPage() {
       .select("id")
       .single();
 
-    if (data?.id) {
-      await fetch("/api/alerts/evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ episode_id: params.episodeId, session_id: data.id })
-      });
+    if (error || !data?.id) {
+      throw new Error(error?.message || "Não foi possível criar a sessão.");
     }
 
+    setSessionId(data.id);
+    return data.id;
+  };
+
+  const saveGeneral = async () => {
+    setSavingGeneral(true);
+    setSavedGeneral(false);
+    setGeneralError(null);
+
+    try {
+      const id = await ensureSession();
+      const { error } = await supabase
+        .from("session")
+        .update({
+          type: sessionType,
+          clinician: clinician.trim() || null,
+          clinician_id: clinicianId,
+          date: sessionDate ? new Date(sessionDate).toISOString() : undefined
+        })
+        .eq("id", id);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setSavedGeneral(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao guardar dados gerais.";
+      setGeneralError(msg);
+    } finally {
+      setSavingGeneral(false);
+    }
+  };
+
+  const saveSection = (key: S) => async (transcript: string, finalText: string) => {
+    const id = await ensureSession();
+    const { error } = await supabase
+      .from("session")
+      .update({
+        [key]: finalText,
+        [`${key}_transcript`]: transcript,
+      })
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  };
+
+  const finish = async () => {
+    const id = await ensureSession();
+    await fetch("/api/alerts/evaluate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ episode_id: params.episodeId, session_id: id })
+    });
     router.push(`/episodes/${params.episodeId}`);
   };
 
@@ -91,42 +158,74 @@ export default function NewSessionPage() {
     <>
       <AuthHeader />
       <main className="container-page space-y-4">
-      <div>
-        <Link className="link-brand-muted" href={`/episodes/${params.episodeId}`}>← Voltar</Link>
-      </div>
-      <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
-
-      <div className="card grid gap-3 md:grid-cols-2">
         <div>
-          <label className="label">Tipo de sessão</label>
-          <select className="input" value={sessionType} onChange={(e) => setSessionType(e.target.value as typeof sessionType)}>
-            <option value="avaliacao">avaliação</option>
-            <option value="tratamento">tratamento</option>
-            <option value="reavaliacao">reavaliação</option>
-            <option value="alta">alta</option>
-          </select>
+          <Link className="link-brand-muted" href={`/episodes/${params.episodeId}`}>← Voltar</Link>
         </div>
-        <div>
-          <label className="label">Clínico</label>
-          <input className="input" value={clinician} onChange={(e) => setClinician(e.target.value)} />
+        <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
+
+        <div className="card space-y-3">
+          <h3 className="text-lg font-semibold">Dados gerais</h3>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div>
+              <label className="label">Tipo de sessão</label>
+              <select
+                className="input"
+                value={sessionType}
+                onChange={(e) => { setSessionType(e.target.value as typeof sessionType); setSavedGeneral(false); setGeneralError(null); }}
+              >
+                <option value="avaliacao">avaliação</option>
+                <option value="tratamento">tratamento</option>
+                <option value="reavaliacao">reavaliação</option>
+                <option value="alta">alta</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Clínico</label>
+              <input
+                className="input"
+                value={clinician}
+                onChange={(e) => { setClinician(e.target.value); setSavedGeneral(false); setGeneralError(null); }}
+              />
+            </div>
+            <div>
+              <label className="label">Data</label>
+              <input
+                className="input"
+                type="date"
+                value={sessionDate}
+                onChange={(e) => { setSessionDate(e.target.value); setSavedGeneral(false); setGeneralError(null); }}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 pt-1">
+            <button className="btn-brand-primary" onClick={saveGeneral} disabled={savingGeneral} type="button">
+              {savingGeneral ? "A guardar..." : "Guardar dados gerais"}
+            </button>
+            {savedGeneral && <span className="text-sm text-state-success">✓ Guardado</span>}
+            {generalError && <span className="text-sm text-state-error">{generalError}</span>}
+          </div>
         </div>
-      </div>
 
-      {sections.map((s) => (
-        <SectionCard
-          key={s.key}
-          section={s.key}
-          title={s.title}
-          transcript={transcripts[s.key]}
-          finalText={finalTexts[s.key]}
-          onChangeTranscript={(v) => setTranscripts((p) => ({ ...p, [s.key]: v }))}
-          onChangeFinalText={(v) => setFinalTexts((p) => ({ ...p, [s.key]: v }))}
-        />
-      ))}
+        {sections.map((s) => (
+          <SectionCard
+            key={s.key}
+            section={s.key}
+            title={s.title}
+            description={s.description}
+            transcript={transcripts[s.key]}
+            finalText={finalTexts[s.key]}
+            onChangeTranscript={(v) => setTranscripts((p) => ({ ...p, [s.key]: v }))}
+            onChangeFinalText={(v) => {
+              setFinalTexts((p) => ({ ...p, [s.key]: v }));
+              setTranscripts((p) => ({ ...p, [s.key]: v }));
+            }}
+            onSave={saveSection(s.key)}
+          />
+        ))}
 
-      <div className="flex justify-end pb-6 pt-2">
-        <button className="btn-brand-primary px-8 py-3 text-lg" onClick={save}>Validar e Guardar</button>
-      </div>
+        <div className="flex justify-end pb-6 pt-2">
+          <button className="btn-brand-primary px-8 py-3 text-lg" onClick={finish} type="button">Concluir sessão</button>
+        </div>
       </main>
     </>
   );
