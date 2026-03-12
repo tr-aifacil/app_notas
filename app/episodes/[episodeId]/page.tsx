@@ -11,7 +11,7 @@ import DeleteEpisodeButton from "@/components/DeleteEpisodeButton";
 import EpisodeStatusEditor from "@/components/EpisodeStatusEditor";
 import StatusBadge from "@/components/StatusBadge";
 import EpisodeMetadataEditor from "@/components/EpisodeMetadataEditor";
-import { prettyLabel } from "@/lib/episodes/analytics";
+import EpisodeClassificationBadges from "@/components/EpisodeClassificationBadges";
 
 export default async function EpisodePage({ params }: { params: { episodeId: string } }) {
   const supabase = createServerSupabase();
@@ -39,14 +39,15 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
               <h1 className="text-xl font-semibold">{episode?.title || "Episódio"}</h1>
               <p className="text-sm text-slate-600">{episode?.profession} / {episode?.area}</p>
               {episode && (
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {[episode.body_region, episode.condition_type, episode.condition_chronicity, episode.case_type].filter(Boolean).map((item, index) => (
-                    <span key={`${item}-${index}`} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{prettyLabel(item)}</span>
-                  ))}
-                  {!episode.analytics_included && (
-                    <span className="text-xs text-slate-500">Excluído das métricas de recovery</span>
-                  )}
-                </div>
+                <EpisodeClassificationBadges
+                  bodyRegion={episode.body_region}
+                  conditionType={episode.condition_type}
+                  conditionChronicity={episode.condition_chronicity}
+                  caseType={episode.case_type}
+                  laterality={episode.laterality}
+                  analyticsIncluded={episode.analytics_included}
+                  showLaterality
+                />
               )}
             </div>
           </div>

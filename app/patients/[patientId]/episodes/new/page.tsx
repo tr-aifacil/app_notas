@@ -7,6 +7,15 @@ import { useRouter, useParams } from "next/navigation";
 import BackButton from "@/components/BackButton";
 import AuthHeader from "@/components/AuthHeader";
 import { buildAnalyticsLabel, isRecoveryAnalyticsIncluded, prettyLabel } from "@/lib/episodes/analytics";
+import {
+  BODY_REGION_OPTIONS,
+  CASE_TYPE_OPTIONS,
+  CONDITION_CHRONICITY_OPTIONS,
+  CONDITION_TYPE_OPTIONS,
+  LATERALITY_OPTIONS,
+  getClassificationLabel,
+  hasClassificationOption,
+} from "@/lib/episodes/classification";
 
 export default function NewEpisodePage() {
   const supabase = createClient();
@@ -40,10 +49,10 @@ export default function NewEpisodePage() {
         area,
         start_date: startDate,
         status: "ativo",
-        body_region: bodyRegion.trim(),
-        condition_type: conditionType.trim(),
+        body_region: bodyRegion,
+        condition_type: conditionType,
         condition_chronicity: conditionChronicity.trim() || null,
-        case_type: caseType.trim(),
+        case_type: caseType,
         laterality: laterality.trim() || null,
         analytics_label: analyticsLabel,
         analytics_included: analyticsIncluded,
@@ -76,36 +85,55 @@ export default function NewEpisodePage() {
             <div className="rounded-md border border-slate-200 p-3">
               <h2 className="mb-2 text-sm font-semibold text-slate-800">Classificação para métricas</h2>
               <div className="grid gap-3 md:grid-cols-2">
-                <div><label className="label">Região / zona</label><input className="input" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)} required /></div>
-                <div><label className="label">Tipologia da condição</label><input className="input" value={conditionType} onChange={(e) => setConditionType(e.target.value)} required /></div>
+                <div>
+                  <label className="label">Região / zona</label>
+                  <select className="input" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)} required>
+                    <option value="">Selecionar</option>
+                    {BODY_REGION_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                    {!!bodyRegion && !hasClassificationOption(BODY_REGION_OPTIONS, bodyRegion) && (
+                      <option value={bodyRegion}>{getClassificationLabel("body_region", bodyRegion, prettyLabel)} (valor atual)</option>
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Tipologia da condição</label>
+                  <select className="input" value={conditionType} onChange={(e) => setConditionType(e.target.value)} required>
+                    <option value="">Selecionar</option>
+                    {CONDITION_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                    {!!conditionType && !hasClassificationOption(CONDITION_TYPE_OPTIONS, conditionType) && (
+                      <option value={conditionType}>{getClassificationLabel("condition_type", conditionType, prettyLabel)} (valor atual)</option>
+                    )}
+                  </select>
+                </div>
                 <div>
                   <label className="label">Cronologia</label>
                   <select className="input" value={conditionChronicity} onChange={(e) => setConditionChronicity(e.target.value)}>
                     <option value="">Selecionar</option>
-                    <option value="agudo">Agudo</option>
-                    <option value="subagudo">Subagudo</option>
-                    <option value="cronico">Crónico</option>
+                    {CONDITION_CHRONICITY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="label">Tipo de caso</label>
                   <select className="input" value={caseType} onChange={(e) => setCaseType(e.target.value)} required>
                     <option value="">Selecionar</option>
-                    <option value="novo_caso">Novo caso</option>
-                    <option value="recorrencia">Recorrência</option>
-                    <option value="flare_up">Flare-up</option>
-                    <option value="manutencao">Manutenção</option>
-                    <option value="pos_operatorio">Pós-operatório</option>
+                    {CASE_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="label">Lado</label>
                   <select className="input" value={laterality} onChange={(e) => setLaterality(e.target.value)}>
                     <option value="">Selecionar</option>
-                    <option value="direito">Direito</option>
-                    <option value="esquerdo">Esquerdo</option>
-                    <option value="bilateral">Bilateral</option>
-                    <option value="nao_aplicavel">Não aplicável</option>
+                    {LATERALITY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
