@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       profession: search.get("profession") || undefined,
       area: search.get("area") || undefined,
       clinicianId: search.get("clinicianId") || undefined,
-      episodeLabel: search.get("episodeLabel") || undefined,
+      analyticsLabel: search.get("analyticsLabel") || undefined,
       outcomeStatus: (search.get("outcomeStatus") as MetricsFilters["outcomeStatus"]) || undefined,
       includeOpen: (search.get("includeOpen") || "false") === "true",
     };
@@ -48,21 +48,22 @@ export async function GET(req: NextRequest) {
       rows = rows.filter((row) => episodeIds.has(row.episode_id));
     }
 
-    const recoveredRows = rows.filter((r) => r.outcome_status === "recovered" && r.recovery_days !== null);
+    const recoveryRowsBase = rows.filter((r) => r.analytics_included);
+    const recoveredRows = recoveryRowsBase.filter((r) => r.outcome_status === "recovered" && r.recovery_days !== null);
     const closedRows = rows.filter((r) => r.outcome_status !== "ongoing");
 
-    const byEpisodeLabel = Array.from(
+    const byAnalyticsLabel = Array.from(
       rows.reduce((map, row) => {
-        const key = row.episode_label || "(sem label)";
+        const key = row.analytics_label || "(sem classificação)";
         if (!map.has(key)) map.set(key, [] as typeof rows);
         map.get(key)?.push(row);
         return map;
       }, new Map<string, typeof rows>()).entries()
     )
-      .map(([episodeLabel, groupRows]) => {
+      .map(([analyticsLabel, groupRows]) => {
         const recovered = groupRows.filter((r) => r.outcome_status === "recovered");
         return {
-          episodeLabel,
+          analyticsLabel,
           count: groupRows.length,
           recoveredCount: recovered.length,
           averageRecoveryDays: average(recovered.map((r) => r.recovery_days)),
@@ -130,7 +131,7 @@ export async function GET(req: NextRequest) {
         averageRecoveryDays: average(recoveredRows.map((r) => r.recovery_days)),
         averageSessionsPerRecoveredEpisode: average(recoveredRows.map((r) => r.session_count)),
       },
-      byEpisodeLabel,
+      byAnalyticsLabel,
       byClinician: byClinicianRows,
       monthlyTrend,
       dataQuality: {
@@ -143,7 +144,9 @@ export async function GET(req: NextRequest) {
         episodeId: row.episode_id,
         patientId: row.patient_id,
         title: row.title,
-        episodeLabel: row.episode_label,
+        analyticsLabel: row.analytics_label,
+        analyticsIncluded: row.analytics_included,
+        caseType: row.case_type,
         profession: row.profession,
         area: row.area,
         status: row.status,
