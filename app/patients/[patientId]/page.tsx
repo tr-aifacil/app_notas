@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
-import { prettyLabel } from "@/lib/episodes/analytics";
+import EpisodeClassificationBadges from "@/components/EpisodeClassificationBadges";
 
 export default async function PatientDetail({ params }: { params: { patientId: string } }) {
   const supabase = createServerSupabase();
@@ -47,12 +47,15 @@ export default async function PatientDetail({ params }: { params: { patientId: s
               <div>
                 <p className="text-sm font-medium text-slate-900">{episode.title}</p>
                 <p className="text-xs text-slate-600">{episode.profession} / {episode.area}</p>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {[episode.body_region, episode.condition_type, episode.condition_chronicity, episode.case_type].filter(Boolean).map((item, index) => (
-                    <span key={`${episode.id}-${item}-${index}`} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{prettyLabel(item)}</span>
-                  ))}
-                  {!episode.analytics_included && <span className="text-xs text-slate-500">Excluído das métricas de recovery</span>}
-                </div>
+                <EpisodeClassificationBadges
+                  bodyRegion={episode.body_region}
+                  conditionType={episode.condition_type}
+                  conditionChronicity={episode.condition_chronicity}
+                  caseType={episode.case_type}
+                  laterality={episode.laterality}
+                  analyticsIncluded={episode.analytics_included}
+                  showLaterality
+                />
               </div>
               <div className="flex items-center gap-2">
                 <StatusBadge status={episode.status} />
