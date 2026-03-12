@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
 import BackButton from "@/components/BackButton";
@@ -9,18 +9,25 @@ import AuthHeader from "@/components/AuthHeader";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 
-const sections: { key: S; title: string }[] = [
-  { key: "subjective", title: "Avaliação Subjetiva" },
-  { key: "objective", title: "Avaliação Objetiva" },
-  { key: "clinical_analysis", title: "Análise Clínica" },
-  { key: "intervention", title: "Intervenção" },
-  { key: "response", title: "Resposta" },
-  { key: "plan", title: "Plano" },
+const sections: { key: S; title: string; description?: string }[] = [
+  { key: "subjective", title: "Avaliação Subjetiva", description: "Registo da informação subjetiva reportada pelo utente" },
+  { key: "objective", title: "Avaliação Objetiva", description: "Registo dos achados objetivos observados na avaliação" },
+  { key: "clinical_analysis", title: "Análise Clínica", description: "Interpretação clínica dos achados e enquadramento do caso" },
+  { key: "intervention", title: "Intervenção", description: "Registo do tratamento realizado na sessão" },
+  {
+    key: "response",
+    title: "Resposta",
+    description: "Registo da resposta do utente à sessão, durante a sessão ou em follow-up"
+  },
+  {
+    key: "plan",
+    title: "Plano",
+    description: "Registo do plano para as próximas sessões, incluindo progressão de carga ou ajustes de intervenção"
+  },
 ];
 
 export default function EditSessionPage() {
   const params = useParams<{ episodeId: string; sessionId: string }>();
-  const router = useRouter();
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
@@ -36,6 +43,7 @@ export default function EditSessionPage() {
   });
   const [savingGeneral, setSavingGeneral] = useState(false);
   const [savedGeneral, setSavedGeneral] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -62,12 +70,12 @@ export default function EditSessionPage() {
           plan: sessionData.plan_transcript ?? "",
         });
         setFinalTexts({
-          subjective: sessionData.subjective ?? "",
-          objective: sessionData.objective ?? "",
-          clinical_analysis: sessionData.clinical_analysis ?? "",
-          intervention: sessionData.intervention ?? "",
-          response: sessionData.response ?? "",
-          plan: sessionData.plan ?? "",
+          subjective: sessionData.subjective ?? sessionData.subjective_transcript ?? "",
+          objective: sessionData.objective ?? sessionData.objective_transcript ?? "",
+          clinical_analysis: sessionData.clinical_analysis ?? sessionData.clinical_analysis_transcript ?? "",
+          intervention: sessionData.intervention ?? sessionData.intervention_transcript ?? "",
+          response: sessionData.response ?? sessionData.response_transcript ?? "",
+          plan: sessionData.plan ?? sessionData.plan_transcript ?? "",
         });
       }
       setLoading(false);
@@ -78,27 +86,44 @@ export default function EditSessionPage() {
   const saveGeneral = async () => {
     setSavingGeneral(true);
     setSavedGeneral(false);
-    await supabase
-      .from("session")
-      .update({
-        type: sessionType,
-        clinician: clinician.trim() || null,
-        clinician_id: clinicianId,
-        date: sessionDate ? new Date(sessionDate).toISOString() : undefined
-      })
-      .eq("id", params.sessionId);
-    setSavingGeneral(false);
-    setSavedGeneral(true);
+    setGeneralError(null);
+
+    try {
+      const { error } = await supabase
+        .from("session")
+        .update({
+          type: sessionType,
+          clinician: clinician.trim() || null,
+          clinician_id: clinicianId,
+          date: sessionDate ? new Date(sessionDate).toISOString() : undefined
+        })
+        .eq("id", params.sessionId);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setSavedGeneral(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao guardar dados gerais.";
+      setGeneralError(msg);
+    } finally {
+      setSavingGeneral(false);
+    }
   };
 
   const saveSection = (key: S) => async (transcript: string, finalText: string) => {
-    await supabase
+    const { error } = await supabase
       .from("session")
       .update({
         [key]: finalText,
         [`${key}_transcript`]: transcript,
       })
       .eq("id", params.sessionId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   };
 
   if (loading) return <main className="container-page"><p className="text-brand-muted">A carregar...</p></main>;
@@ -120,7 +145,7 @@ export default function EditSessionPage() {
             <select
               className="input"
               value={sessionType}
-              onChange={(e) => { setSessionType(e.target.value as typeof sessionType); setSavedGeneral(false); }}
+              onChange={(e) => { setSessionType(e.target.value as typeof sessionType); setSavedGeneral(false); setGeneralError(null); }}
             >
               <option value="avaliacao">avaliação</option>
               <option value="tratamento">tratamento</option>
@@ -133,7 +158,7 @@ export default function EditSessionPage() {
             <input
               className="input"
               value={clinician}
-              onChange={(e) => { setClinician(e.target.value); setSavedGeneral(false); }}
+              onChange={(e) => { setClinician(e.target.value); setSavedGeneral(false); setGeneralError(null); }}
             />
           </div>
           <div>
@@ -142,7 +167,7 @@ export default function EditSessionPage() {
               className="input"
               type="date"
               value={sessionDate}
-              onChange={(e) => { setSessionDate(e.target.value); setSavedGeneral(false); }}
+              onChange={(e) => { setSessionDate(e.target.value); setSavedGeneral(false); setGeneralError(null); }}
             />
           </div>
         </div>
@@ -151,6 +176,7 @@ export default function EditSessionPage() {
             {savingGeneral ? "A guardar..." : "Guardar dados gerais"}
           </button>
           {savedGeneral && <span className="text-sm text-state-success">✓ Guardado</span>}
+          {generalError && <span className="text-sm text-state-error">{generalError}</span>}
         </div>
       </div>
 
@@ -159,10 +185,14 @@ export default function EditSessionPage() {
           key={s.key}
           section={s.key}
           title={s.title}
+          description={s.description}
           transcript={transcripts[s.key]}
           finalText={finalTexts[s.key]}
           onChangeTranscript={(v) => setTranscripts((p) => ({ ...p, [s.key]: v }))}
-          onChangeFinalText={(v) => setFinalTexts((p) => ({ ...p, [s.key]: v }))}
+          onChangeFinalText={(v) => {
+            setFinalTexts((p) => ({ ...p, [s.key]: v }));
+            setTranscripts((p) => ({ ...p, [s.key]: v }));
+          }}
           onSave={saveSection(s.key)}
         />
       ))}

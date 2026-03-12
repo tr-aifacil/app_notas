@@ -5,18 +5,13 @@ import { useRef, useState } from "react";
 type Props = {
   section: "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
   title: string;
+  description?: string;
   transcript: string;
   finalText: string;
   onChangeTranscript: (v: string) => void;
   onChangeFinalText: (v: string) => void;
   onSave?: (transcript: string, finalText: string) => Promise<void>;
 };
-
-function formatJsonToText(obj: Record<string, string>) {
-  return Object.entries(obj)
-    .map(([k, v]) => `${k}: ${v || ""}`)
-    .join("\n");
-}
 
 function getBestMimeType(): string {
   const candidates = ["audio/webm", "audio/mp4", "audio/ogg"];
@@ -34,6 +29,7 @@ export default function SectionCard(props: Props) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
@@ -83,7 +79,10 @@ export default function SectionCard(props: Props) {
       if (!res.ok) {
         setError(json.error || "Erro ao transcrever áudio.");
       } else {
-        props.onChangeTranscript(json.transcript || "");
+        const transcript = json.transcript || "";
+        props.onChangeTranscript(transcript);
+        props.onChangeFinalText((props.finalText ? `${props.finalText}\n` : "") + transcript);
+        setSaved(false);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -94,46 +93,31 @@ export default function SectionCard(props: Props) {
     }
   };
 
-  const organize = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/ai/organize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section: props.section, transcricao: props.transcript })
-      });
-      const data = await res.json();
-      props.onChangeFinalText(formatJsonToText(data.json || {}));
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(`Erro ao organizar: ${msg}`);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <div className="card space-y-3">
       <h3 className="text-lg font-semibold">{props.title}</h3>
+      {props.description && <p className="text-sm text-brand-muted">{props.description}</p>}
       <div className="flex gap-2">
         {!isRecording ? (
           <button className="btn-brand-secondary" onClick={startRecord} type="button" disabled={busy}>Gravar</button>
         ) : (
           <button className="btn-brand-secondary" onClick={stopRecordAndTranscribe} type="button" disabled={busy}>Parar</button>
         )}
-        <button className="btn-brand-primary" onClick={organize} type="button" disabled={busy}>Organizar com AI</button>
       </div>
       {error && <p className="text-sm text-state-error">{error}</p>}
 
       <div>
-        <label className="label">Transcrição (editável)</label>
-        <textarea className="input min-h-24" value={props.transcript} onChange={(e) => props.onChangeTranscript(e.target.value)} />
-      </div>
-
-      <div>
-        <label className="label">Texto final (editável)</label>
-        <textarea className="input min-h-40" value={props.finalText} onChange={(e) => { props.onChangeFinalText(e.target.value); setSaved(false); }} />
+        <label className="label">{props.title}</label>
+        <textarea
+          className="input min-h-40"
+          value={props.finalText}
+          onChange={(e) => {
+            props.onChangeFinalText(e.target.value);
+            props.onChangeTranscript(e.target.value);
+            setSaved(false);
+            setSaveError(null);
+          }}
+        />
       </div>
 
       {props.onSave && (
@@ -145,17 +129,22 @@ export default function SectionCard(props: Props) {
             onClick={async () => {
               setSaving(true);
               setSaved(false);
+              setSaveError(null);
               try {
                 await props.onSave!(props.transcript, props.finalText);
                 setSaved(true);
+              } catch (err) {
+                const msg = err instanceof Error ? err.message : "Erro ao guardar secção.";
+                setSaveError(msg);
               } finally {
                 setSaving(false);
               }
             }}
           >
-            {saving ? "A guardar..." : "Guardar secção"}
+            {saving ? "A guardar..." : `Guardar ${props.title}`}
           </button>
           {saved && <span className="text-sm text-state-success">✓ Guardado</span>}
+          {saveError && <span className="text-sm text-state-error">{saveError}</span>}
         </div>
       )}
     </div>
