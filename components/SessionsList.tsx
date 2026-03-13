@@ -49,14 +49,14 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <button
-                className="btn-secondary px-3 py-1.5 text-xs"
+                className="btn-brand-outline px-3 py-1.5 text-xs"
                 onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
                 type="button"
               >
                 {expandedId === s.id ? "Fechar" : "Detalhes"}
               </button>
               <Link
-                className="btn-secondary px-3 py-1.5 text-xs"
+                className="btn-brand-outline px-3 py-1.5 text-xs"
                 href={`/episodes/${episodeId}/sessions/${s.id}/edit`}
               >
                 Editar
@@ -71,7 +71,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
                     Confirmar
                   </button>
                   <button
-                    className="btn-secondary px-3 py-1.5 text-xs"
+                    className="btn-brand-secondary px-3 py-1.5 text-xs"
                     onClick={() => setConfirmDeleteId(null)}
                     type="button"
                   >

@@ -205,9 +205,9 @@ export default function AdminDashboard() {
           </tbody>
         </table>
         <div className="mt-3 flex items-center gap-2">
-          <button className="btn-secondary" disabled={filters.page <= 1} onClick={() => setFilter("page", filters.page - 1)}>Anterior</button>
+          <button className="btn-brand-secondary" disabled={filters.page <= 1} onClick={() => setFilter("page", filters.page - 1)}>Anterior</button>
           <span className="text-sm">Página {data.pagination.page}</span>
-          <button className="btn-secondary" disabled={data.pagination.page * data.pagination.pageSize >= data.pagination.totalRows} onClick={() => setFilter("page", filters.page + 1)}>Seguinte</button>
+          <button className="btn-brand-secondary" disabled={data.pagination.page * data.pagination.pageSize >= data.pagination.totalRows} onClick={() => setFilter("page", filters.page + 1)}>Seguinte</button>
         </div>
       </section>
     </div>

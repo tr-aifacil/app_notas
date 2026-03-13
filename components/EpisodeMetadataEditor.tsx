@@ -128,7 +128,7 @@ export default function EpisodeMetadataEditor({
         <p className="text-sm text-slate-700">Conta para métricas de recuperação: {analyticsIncluded ? "Sim" : "Não"}</p>
       </div>
       <div>
-        <button className="btn-secondary" type="button" onClick={save} disabled={saving || !title.trim() || !bodyRegion.trim() || !conditionType.trim() || !caseType.trim()}>{saving ? "A guardar..." : "Guardar metadados"}</button>
+        <button className="btn-brand-primary" type="button" onClick={save} disabled={saving || !title.trim() || !bodyRegion.trim() || !conditionType.trim() || !caseType.trim()}>{saving ? "A guardar..." : "Guardar metadados"}</button>
       </div>
     </div>
   );
