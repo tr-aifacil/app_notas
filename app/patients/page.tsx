@@ -113,7 +113,7 @@ export default function PatientsPage() {
               <label className="label">Código interno</label>
               <input className="input" placeholder="Ex: PT-0001" value={internalCode} onChange={(e) => setInternalCode(e.target.value)} required />
             </div>
-            <button className="btn-primary w-full" type="submit">Criar paciente</button>
+            <button className="btn-brand-primary w-full" type="submit">Criar paciente</button>
           </form>
         </section>
 
@@ -154,7 +154,7 @@ export default function PatientsPage() {
             {filteredPatients.map((p) => (
               <li key={p.id} className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2">
                 <span className="text-sm font-medium text-slate-800">{p.name} <span className="font-normal text-slate-500">({p.internal_code})</span></span>
-                <Link className="btn-secondary px-3 py-1.5 text-xs" href={`/patients/${p.id}`}>Detalhes</Link>
+                <Link className="btn-brand-outline px-3 py-1.5 text-xs" href={`/patients/${p.id}`}>Detalhes</Link>
               </li>
             ))}
             {filteredPatients.length === 0 && <li className="text-sm text-slate-500">Sem pacientes para os filtros selecionados.</li>}

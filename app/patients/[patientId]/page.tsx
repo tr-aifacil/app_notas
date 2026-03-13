@@ -15,9 +15,6 @@ export default async function PatientDetail({ params }: { params: { patientId: s
 
   return (
     <main className="container-page space-y-4">
-      <div>
-        <Link className="text-sm text-slate-500 hover:text-slate-700" href="/patients">← Voltar</Link>
-      </div>
 
       <section className="card">
         <div className="mb-4 flex items-start justify-between gap-4">
@@ -32,7 +29,7 @@ export default async function PatientDetail({ params }: { params: { patientId: s
               <p className="text-sm text-slate-600">Resumo de episódios clínicos e evolução terapêutica.</p>
             </div>
           </div>
-          <Link className="btn-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
+          <Link className="btn-brand-primary" href={`/patients/${params.patientId}/episodes/new`}>Novo episódio</Link>
         </div>
       </section>
 
@@ -59,8 +56,8 @@ export default async function PatientDetail({ params }: { params: { patientId: s
               </div>
               <div className="flex items-center gap-2">
                 <StatusBadge status={episode.status} />
-                <Link className="btn-secondary px-3 py-1.5 text-xs" href={`/episodes/${episode.id}`}>Detalhes</Link>
-                <Link className="btn-secondary px-3 py-1.5 text-xs" href={`/episodes/${episode.id}#estado`}>Editar</Link>
+                <Link className="btn-brand-outline px-3 py-1.5 text-xs" href={`/episodes/${episode.id}`}>Detalhes</Link>
+                <Link className="btn-brand-outline px-3 py-1.5 text-xs" href={`/episodes/${episode.id}#estado`}>Editar</Link>
               </div>
             </li>
           ))}

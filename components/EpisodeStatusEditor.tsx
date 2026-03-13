@@ -91,7 +91,7 @@ export default function EpisodeStatusEditor({
         <label className="label">Data outcome</label>
         <input className="input" type="date" value={outcomeDate} disabled={!isClosed} onChange={(e) => { setOutcomeDate(e.target.value); setSaved(false); }} />
       </div>
-      <button className="btn-secondary" onClick={save} disabled={saving}>{saving ? "A guardar..." : "Guardar estado"}</button>
+      <button className="btn-brand-primary" onClick={save} disabled={saving}>{saving ? "A guardar..." : "Guardar estado"}</button>
       {saved && <span className="text-sm text-emerald-700">Guardado.</span>}
     </div>
   );

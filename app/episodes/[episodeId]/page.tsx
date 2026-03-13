@@ -27,9 +27,6 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
     <>
       <AuthHeader />
       <main className="container-page space-y-4">
-      <div>
-        <Link className="link-brand-muted" href={`/patients/${episode?.patient_id}`}>← Voltar</Link>
-      </div>
 
       <section className="card" id="estado">
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
@@ -56,7 +53,7 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
             {episode?.start_date && (
               <span className="text-sm text-slate-500">Início: {new Date(episode.start_date).toLocaleDateString("pt-PT")}</span>
             )}
-            <Link className="btn-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova Sessão</Link>
+            <Link className="btn-brand-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova Sessão</Link>
             {episode && <DeleteEpisodeButton episodeId={episode.id} patientId={episode.patient_id} />}
           </div>
         </div>
