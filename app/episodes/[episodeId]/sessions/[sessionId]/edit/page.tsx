@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
 import BackButton from "@/components/BackButton";
 import AuthHeader from "@/components/AuthHeader";
+import { useToast } from "@/components/ToastProvider";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 
@@ -29,6 +30,7 @@ const sections: { key: S; title: string; description?: string }[] = [
 export default function EditSessionPage() {
   const params = useParams<{ episodeId: string; sessionId: string }>();
   const supabase = createClient();
+  const { success, error: toastError } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [sessionType, setSessionType] = useState<"avaliacao" | "tratamento" | "reavaliacao" | "alta">("tratamento");
@@ -60,7 +62,7 @@ export default function EditSessionPage() {
         setSessionType(sessionData.type as typeof sessionType);
         setClinician(sessionData.clinician ?? "");
         setClinicianId(sessionData.clinician_id ?? authData.user?.id ?? null);
-        setSessionDate(sessionData.date ? new Date(sessionData.date).toISOString().slice(0, 10) : "");
+        setSessionDate(sessionData.date || "");
         setTranscripts({
           subjective: sessionData.subjective_transcript ?? "",
           objective: sessionData.objective_transcript ?? "",
@@ -95,7 +97,7 @@ export default function EditSessionPage() {
           type: sessionType,
           clinician: clinician.trim() || null,
           clinician_id: clinicianId,
-          date: sessionDate ? new Date(sessionDate).toISOString() : undefined
+          date: sessionDate || undefined
         })
         .eq("id", params.sessionId);
 
@@ -104,9 +106,11 @@ export default function EditSessionPage() {
       }
 
       setSavedGeneral(true);
+      success("Guardado com sucesso");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao guardar dados gerais.";
       setGeneralError(msg);
+      toastError("Erro ao guardar");
     } finally {
       setSavingGeneral(false);
     }

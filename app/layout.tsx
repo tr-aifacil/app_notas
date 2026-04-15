@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import PwaRegister from "@/components/PwaRegister";
+import { ToastProvider } from "@/components/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Espaço N Saúde | Registo Clínico",
@@ -11,8 +12,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-PT">
       <body>
-        <PwaRegister />
-        {children}
+        <ToastProvider>
+          <PwaRegister />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

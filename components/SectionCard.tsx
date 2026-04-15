@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useToast } from "@/components/ToastProvider";
 
 type Props = {
   section: "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
@@ -24,6 +25,7 @@ function getBestMimeType(): string {
 }
 
 export default function SectionCard(props: Props) {
+  const { success, error: toastError } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,9 +135,11 @@ export default function SectionCard(props: Props) {
               try {
                 await props.onSave!(props.transcript, props.finalText);
                 setSaved(true);
+                success("Guardado com sucesso");
               } catch (err) {
                 const msg = err instanceof Error ? err.message : "Erro ao guardar secção.";
                 setSaveError(msg);
+                toastError("Erro ao guardar");
               } finally {
                 setSaving(false);
               }
