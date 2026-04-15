@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
 import AuthHeader from "@/components/AuthHeader";
+import { useToast } from "@/components/ToastProvider";
+import Spinner from "@/components/Spinner";
 
 type S = "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
 const sections: { key: S; title: string; description?: string }[] = [
@@ -29,6 +31,7 @@ export default function NewSessionPage() {
   const params = useParams<{ episodeId: string }>();
   const router = useRouter();
   const supabase = createClient();
+  const { success, error: toastError } = useToast();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionType, setSessionType] = useState<"avaliacao" | "tratamento" | "reavaliacao" | "alta">("tratamento");
@@ -44,6 +47,7 @@ export default function NewSessionPage() {
   const [savingGeneral, setSavingGeneral] = useState(false);
   const [savedGeneral, setSavedGeneral] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -71,7 +75,7 @@ export default function NewSessionPage() {
       .from("session")
       .insert({
         episode_id: params.episodeId,
-        date: sessionDate ? new Date(sessionDate).toISOString() : new Date().toISOString(),
+        date: sessionDate || new Date().toISOString().slice(0, 10),
         clinician: clinician.trim() || null,
         clinician_id: clinicianId,
         type: sessionType,
@@ -112,7 +116,7 @@ export default function NewSessionPage() {
           type: sessionType,
           clinician: clinician.trim() || null,
           clinician_id: clinicianId,
-          date: sessionDate ? new Date(sessionDate).toISOString() : undefined
+          date: sessionDate || undefined
         })
         .eq("id", id);
 
@@ -121,9 +125,11 @@ export default function NewSessionPage() {
       }
 
       setSavedGeneral(true);
+      success("Guardado com sucesso");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao guardar dados gerais.";
       setGeneralError(msg);
+      toastError("Erro ao guardar");
     } finally {
       setSavingGeneral(false);
     }
@@ -145,12 +151,10 @@ export default function NewSessionPage() {
   };
 
   const finish = async () => {
-    const id = await ensureSession();
-    await fetch("/api/alerts/evaluate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ episode_id: params.episodeId, session_id: id })
-    });
+    setFinishing(true);
+    await ensureSession();
+    success("Guardado com sucesso");
+    setFinishing(false);
     router.push(`/episodes/${params.episodeId}`);
   };
 
@@ -224,7 +228,9 @@ export default function NewSessionPage() {
         ))}
 
         <div className="flex justify-end pb-6 pt-2">
-          <button className="btn-brand-primary px-8 py-3 text-lg" onClick={finish} type="button">Concluir sessão</button>
+          <button className="btn-brand-primary px-8 py-3 text-lg" disabled={finishing} onClick={finish} type="button">
+            {finishing ? <span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" />A guardar...</span> : "Concluir sessão"}
+          </button>
         </div>
       </main>
     </>

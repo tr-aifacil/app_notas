@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import BackButton from "@/components/BackButton";
 import AuthHeader from "@/components/AuthHeader";
+import { useToast } from "@/components/ToastProvider";
 import { buildAnalyticsLabel, isRecoveryAnalyticsIncluded, prettyLabel } from "@/lib/episodes/analytics";
 import {
   BODY_REGION_OPTIONS,
@@ -21,6 +22,7 @@ export default function NewEpisodePage() {
   const supabase = createClient();
   const router = useRouter();
   const params = useParams<{ patientId: string }>();
+  const { success, error: toastError } = useToast();
   const [title, setTitle] = useState("");
   const [profession, setProfession] = useState("fisioterapia");
   const [area, setArea] = useState("musculo-esqueletica");
@@ -30,6 +32,7 @@ export default function NewEpisodePage() {
   const [conditionChronicity, setConditionChronicity] = useState("");
   const [caseType, setCaseType] = useState("");
   const [laterality, setLaterality] = useState("");
+  const [creatingEpisode, setCreatingEpisode] = useState(false);
 
   const analyticsLabel = useMemo(
     () => buildAnalyticsLabel({ bodyRegion, conditionType, conditionChronicity }),
@@ -39,6 +42,7 @@ export default function NewEpisodePage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreatingEpisode(true);
 
     const { data, error } = await supabase
       .from("episode_of_care")
@@ -60,7 +64,13 @@ export default function NewEpisodePage() {
       .select("*")
       .single();
 
-    if (!error && data) router.push(`/episodes/${data.id}`);
+    setCreatingEpisode(false);
+    if (error || !data) {
+      toastError("Erro ao guardar");
+      return;
+    }
+    success("Guardado com sucesso");
+    router.push(`/episodes/${data.id}`);
   };
 
   return (
@@ -144,7 +154,9 @@ export default function NewEpisodePage() {
             <div><label className="label">Profissão</label><input className="input" value={profession} onChange={(e) => setProfession(e.target.value)} required /></div>
             <div><label className="label">Área</label><input className="input" value={area} onChange={(e) => setArea(e.target.value)} required /></div>
             <div><label className="label">Data início</label><input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required /></div>
-            <button className="btn-brand-primary" type="submit">Criar episódio</button>
+            <button className="btn-brand-primary" disabled={creatingEpisode} type="submit">
+              {creatingEpisode ? "A guardar..." : "Criar episódio"}
+            </button>
           </form>
         </div>
       </main>

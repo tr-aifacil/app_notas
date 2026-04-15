@@ -2,34 +2,38 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ToastProvider";
+import Spinner from "@/components/Spinner";
 
 export default function ScalesForm({ episodeId, sessionId }: { episodeId: string; sessionId?: string }) {
   const supabase = createClient();
+  const { success, error: toastError } = useToast();
   const [type, setType] = useState("END");
   const [value, setValue] = useState("");
   const [appliedAt, setAppliedAt] = useState(new Date().toISOString().slice(0, 10));
   const [msg, setMsg] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const num = Number(value);
     if (Number.isNaN(num)) return setMsg("Valor inválido.");
     if (type === "END" && (num < 0 || num > 10)) return setMsg("END deve estar entre 0 e 10.");
-
-    await supabase.from("scale_result").insert({
+    setSaving(true);
+    const { error: insertError } = await supabase.from("scale_result").insert({
       episode_id: episodeId,
       session_id: sessionId ?? null,
       type: type as "END" | "DASH" | "KOOS" | "RolandMorris" | "NDI",
       value: num,
       applied_at: appliedAt
     });
+    setSaving(false);
+    if (insertError) {
+      toastError("Erro ao guardar");
+      return;
+    }
 
-    await fetch("/api/alerts/evaluate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ episode_id: episodeId, session_id: sessionId ?? null })
-    });
-
+    success("Guardado com sucesso");
     setMsg("Escala registada.");
     setValue("");
   };
@@ -44,7 +48,9 @@ export default function ScalesForm({ episodeId, sessionId }: { episodeId: string
         <input className="input" type="number" value={value} onChange={(e) => setValue(e.target.value)} required />
         <input className="input" type="date" value={appliedAt} onChange={(e) => setAppliedAt(e.target.value)} required />
       </div>
-      <button className="btn-brand-primary" type="submit">Guardar escala</button>
+      <button className="btn-brand-primary" disabled={saving} type="submit">
+        {saving ? <span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" />A guardar...</span> : "Guardar escala"}
+      </button>
       {msg && <p className="text-sm">{msg}</p>}
     </form>
   );

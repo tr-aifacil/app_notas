@@ -4,18 +4,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import AuthHeader from "@/components/AuthHeader";
+import { useToast } from "@/components/ToastProvider";
 
 type Patient = { id: string; internal_code: string; name: string };
 type Clinician = { id: string; display_name: string };
 
 export default function PatientsPage() {
   const supabase = createClient();
+  const { success, error: toastError } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [clinicians, setClinicians] = useState<Clinician[]>([]);
   const [selectedClinicianId, setSelectedClinicianId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [name, setName] = useState("");
   const [internalCode, setInternalCode] = useState("");
+  const [creatingPatient, setCreatingPatient] = useState(false);
 
   const loadClinicians = useCallback(async () => {
     const { data } = await supabase
@@ -90,7 +93,14 @@ export default function PatientsPage() {
   const createPatient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !internalCode.trim()) return;
-    await supabase.from("patient").insert({ name: name.trim(), internal_code: internalCode.trim() });
+    setCreatingPatient(true);
+    const { error } = await supabase.from("patient").insert({ name: name.trim(), internal_code: internalCode.trim() });
+    setCreatingPatient(false);
+    if (error) {
+      toastError("Erro ao guardar");
+      return;
+    }
+    success("Guardado com sucesso");
     setName("");
     setInternalCode("");
     loadPatients();
@@ -113,7 +123,9 @@ export default function PatientsPage() {
               <label className="label">Código interno</label>
               <input className="input" placeholder="Ex: PT-0001" value={internalCode} onChange={(e) => setInternalCode(e.target.value)} required />
             </div>
-            <button className="btn-brand-primary w-full" type="submit">Criar paciente</button>
+            <button className="btn-brand-primary w-full" disabled={creatingPatient} type="submit">
+              {creatingPatient ? "A guardar..." : "Criar paciente"}
+            </button>
           </form>
         </section>
 

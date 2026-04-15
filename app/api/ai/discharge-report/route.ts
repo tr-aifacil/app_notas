@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabase, createServerSupabase } from "@/lib/supabase/server";
 import { generateDischargeReport } from "@/lib/reports/generateDischargeReport";
-import { evaluateAlerts } from "@/lib/alerts/evaluateAlerts";
 import { Database } from "@/lib/db/types";
 
 export const runtime = "nodejs";
@@ -14,8 +13,6 @@ export async function POST(req: Request) {
   try {
     const { episode_id } = await req.json();
     if (!episode_id) return NextResponse.json({ error: "episode_id obrigatório" }, { status: 400 });
-
-    await evaluateAlerts(episode_id);
 
     const supabase = createAdminSupabase();
     const { data: episodeData } = await supabase.from("episode_of_care").select("*").eq("id", episode_id).single();

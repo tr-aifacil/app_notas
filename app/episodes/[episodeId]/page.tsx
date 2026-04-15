@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import ScalesForm from "@/components/ScalesForm";
 import ScalesList from "@/components/ScalesList";
-import AlertsPanel from "@/components/AlertsPanel";
+import RemindersPanel from "@/components/RemindersPanel";
 import DischargeReportEditor from "@/components/DischargeReportEditor";
 import BackButton from "@/components/BackButton";
 import AuthHeader from "@/components/AuthHeader";
@@ -12,6 +12,7 @@ import EpisodeStatusEditor from "@/components/EpisodeStatusEditor";
 import StatusBadge from "@/components/StatusBadge";
 import EpisodeMetadataEditor from "@/components/EpisodeMetadataEditor";
 import EpisodeClassificationBadges from "@/components/EpisodeClassificationBadges";
+import { formatDatePT } from "@/lib/utils/formatDate";
 
 export default async function EpisodePage({ params }: { params: { episodeId: string } }) {
   const supabase = createServerSupabase();
@@ -51,7 +52,7 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={episode?.status} />
             {episode?.start_date && (
-              <span className="text-sm text-slate-500">Início: {new Date(episode.start_date).toLocaleDateString("pt-PT")}</span>
+              <span className="text-sm text-slate-500">Início: {formatDatePT(episode.start_date)}</span>
             )}
             <Link className="btn-brand-primary" href={`/episodes/${params.episodeId}/sessions/new`}>Nova Sessão</Link>
             {episode && <DeleteEpisodeButton episodeId={episode.id} patientId={episode.patient_id} />}
@@ -96,7 +97,12 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
         </section>
 
         <aside className="space-y-4">
-          <AlertsPanel alerts={alerts || []} userName={userData.user?.email || "clinician"} />
+          <RemindersPanel
+            canCreate={episode?.status === "ativo"}
+            episodeId={params.episodeId}
+            reminders={alerts || []}
+            userId={userData.user?.id || null}
+          />
         </aside>
       </div>
     </main>

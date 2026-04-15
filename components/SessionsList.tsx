@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { formatDatePT } from "@/lib/utils/formatDate";
+import { useToast } from "@/components/ToastProvider";
 
 type Session = {
   id: string;
@@ -30,11 +32,20 @@ const sectionLabels: { key: keyof Session; label: string }[] = [
 export default function SessionsList({ sessions, episodeId }: { sessions: Session[]; episodeId: string }) {
   const supabase = createClient();
   const router = useRouter();
+  const { success, error: toastError } = useToast();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const deleteSession = async (sessionId: string) => {
-    await supabase.from("session").delete().eq("id", sessionId);
+    setDeletingId(sessionId);
+    const { error: deleteError } = await supabase.from("session").delete().eq("id", sessionId);
+    setDeletingId(null);
+    if (deleteError) {
+      toastError("Erro ao guardar");
+      return;
+    }
+    success("Guardado com sucesso");
     setConfirmDeleteId(null);
     router.refresh();
   };
@@ -45,7 +56,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
         <li key={s.id} className="rounded-md border border-slate-200 px-3 py-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-brand-foreground">
-              {new Date(s.date).toLocaleString("pt-PT")} — {s.type} — {s.clinician}
+              {formatDatePT(s.date)} — {s.type} — {s.clinician}
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -66,9 +77,10 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
                   <button
                     className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
                     onClick={() => deleteSession(s.id)}
+                    disabled={deletingId === s.id}
                     type="button"
                   >
-                    Confirmar
+                    {deletingId === s.id ? "A guardar..." : "Confirmar"}
                   </button>
                   <button
                     className="btn-brand-secondary px-3 py-1.5 text-xs"

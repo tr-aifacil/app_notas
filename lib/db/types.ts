@@ -49,8 +49,8 @@ export type Database = {
       };
       alert_log: {
         Row: {
-          id: string; episode_id: string; session_id: string | null; rule_code: string; message: string; created_at: string;
-          dismissed: boolean; dismissed_by: string | null; dismissed_at: string | null;
+          id: string; episode_id: string; session_id: string | null; rule_code: string | null; title: string; due_date: string | null;
+          message: string; created_at: string; created_by: string | null; dismissed: boolean; dismissed_by: string | null; dismissed_at: string | null;
         };
         Insert: Omit<Database["public"]["Tables"]["alert_log"]["Row"], "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<Database["public"]["Tables"]["alert_log"]["Row"]>;
