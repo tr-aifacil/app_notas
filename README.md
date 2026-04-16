@@ -27,6 +27,7 @@ npm run dev
 Copiar `.env.example` para `.env.local` e preencher:
 
 ```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
@@ -34,6 +35,8 @@ OPENAI_API_KEY=...
 ```
 
 > Nunca colocar segredos no cliente.
+
+> Em produção (Vercel), define `NEXT_PUBLIC_APP_URL` com o domínio público da app (ex.: `https://app.exemplo.com`).
 
 ## 4) Fluxo de teste do MVP
 
