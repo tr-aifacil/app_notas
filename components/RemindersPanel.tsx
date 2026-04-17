@@ -14,6 +14,23 @@ type Reminder = {
   dismissed: boolean;
 };
 
+const normalizeDueDate = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  const ptMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (ptMatch) {
+    const [, day, month, year] = ptMatch;
+    return `${year}-${month}-${day}`;
+  }
+
+  return null;
+};
+
 export default function RemindersPanel({
   reminders,
   episodeId,
@@ -33,32 +50,64 @@ export default function RemindersPanel({
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [busyReminderId, setBusyReminderId] = useState<string | null>(null);
+  const [items, setItems] = useState<Reminder[]>(reminders);
 
   const createReminder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+
+    const cleanTitle = title.trim();
+    if (!cleanTitle) {
+      toastError("O título é obrigatório.");
+      return;
+    }
+
+    const parsedDueDate = normalizeDueDate(dueDate);
+    if (dueDate.trim() && !parsedDueDate) {
+      toastError("A data limite é inválida. Use AAAA-MM-DD.");
+      return;
+    }
+
     setSaving(true);
-    const { error: insertError } = await supabase.from("alert_log").insert({
+
+    const payload = {
       episode_id: episodeId,
-      title: title.trim(),
+      title: cleanTitle,
       message: message.trim(),
-      due_date: dueDate || null,
+      due_date: parsedDueDate,
       rule_code: "MANUAL",
       created_by: userId,
       dismissed: false
-    });
+    };
+
+    const { data: insertedReminder, error: insertError } = await supabase
+      .from("alert_log")
+      .insert(payload)
+      .select("id, title, message, due_date, created_at, dismissed")
+      .single();
 
     setSaving(false);
+
     if (insertError) {
-      toastError("Erro ao guardar");
+      console.error("[reminders] failed to save reminder", {
+        message: insertError.message,
+        code: insertError.code,
+        details: insertError.details,
+        hint: insertError.hint,
+        episodeId,
+        hasDueDate: Boolean(parsedDueDate)
+      });
+      toastError(`Não foi possível guardar o lembrete: ${insertError.message}`);
       return;
     }
-    success("Guardado com sucesso");
+
+    if (insertedReminder) {
+      setItems((prev) => [insertedReminder, ...prev]);
+    }
+    success("Lembrete guardado com sucesso.");
     setIsOpen(false);
     setTitle("");
     setDueDate("");
     setMessage("");
-    location.reload();
   };
 
   const dismiss = async (id: string) => {
@@ -73,12 +122,21 @@ export default function RemindersPanel({
       .eq("id", id);
 
     setBusyReminderId(null);
+
     if (updateError) {
-      toastError("Erro ao guardar");
+      console.error("[reminders] failed to dismiss reminder", {
+        message: updateError.message,
+        code: updateError.code,
+        details: updateError.details,
+        hint: updateError.hint,
+        reminderId: id
+      });
+      toastError(`Não foi possível atualizar o lembrete: ${updateError.message}`);
       return;
     }
-    success("Guardado com sucesso");
-    location.reload();
+
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, dismissed: true } : item)));
+    success("Lembrete concluído com sucesso.");
   };
 
   return (
@@ -119,7 +177,7 @@ export default function RemindersPanel({
       )}
 
       <ul className="space-y-2">
-        {reminders.map((reminder) => (
+        {items.map((reminder) => (
           <li key={reminder.id} className="rounded border p-2">
             <p className="text-sm font-medium">{reminder.title}</p>
             {reminder.due_date && <p className="text-xs text-brand-muted">Prazo: {formatDatePT(reminder.due_date)}</p>}
@@ -139,7 +197,7 @@ export default function RemindersPanel({
             )}
           </li>
         ))}
-        {reminders.length === 0 && <li className="text-sm text-brand-muted">Sem lembretes registados.</li>}
+        {items.length === 0 && <li className="text-sm text-brand-muted">Sem lembretes registados.</li>}
       </ul>
     </div>
   );
