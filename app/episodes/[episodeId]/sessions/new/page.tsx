@@ -166,13 +166,19 @@ export default function NewSessionPage() {
           <Link className="link-brand-muted" href={`/episodes/${params.episodeId}`}>← Voltar</Link>
         </div>
         <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
+        <nav className="flex flex-wrap gap-2" aria-label="Secções da sessão">
+          {sections.map((section) => (
+            <a className="btn-brand-outline" href={`#section-${section.key}-card`} key={section.key}>{section.title}</a>
+          ))}
+        </nav>
 
         <div className="card space-y-3">
           <h3 className="text-lg font-semibold">Dados gerais</h3>
           <div className="grid gap-3 md:grid-cols-3">
             <div>
-              <label className="label">Tipo de sessão</label>
+              <label className="label" htmlFor="session-type">Tipo de sessão</label>
               <select
+                id="session-type"
                 className="input"
                 value={sessionType}
                 onChange={(e) => { setSessionType(e.target.value as typeof sessionType); setSavedGeneral(false); setGeneralError(null); }}
@@ -184,16 +190,18 @@ export default function NewSessionPage() {
               </select>
             </div>
             <div>
-              <label className="label">Clínico</label>
+              <label className="label" htmlFor="session-clinician">Clínico</label>
               <input
+                id="session-clinician"
                 className="input"
                 value={clinician}
                 onChange={(e) => { setClinician(e.target.value); setSavedGeneral(false); setGeneralError(null); }}
               />
             </div>
             <div>
-              <label className="label">Data</label>
+              <label className="label" htmlFor="session-date">Data</label>
               <input
+                id="session-date"
                 className="input"
                 type="date"
                 value={sessionDate}

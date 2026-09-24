@@ -28,18 +28,26 @@ export default function EpisodeStatusEditor({
   const [outcomeDate, setOutcomeDate] = useState(initialOutcomeDate ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
   const isClosed = status !== "ativo";
 
   const save = async () => {
     setSaving(true);
     setSaved(false);
+    setError("");
+
+    if (status !== "ativo" && (!endDate || !outcomeDate)) {
+      setSaving(false);
+      setError("Indica as datas de fim e do resultado antes de concluir o episódio.");
+      return;
+    }
 
     const nextOutcomeStatus: OutcomeStatus = isClosed
       ? (outcomeStatus === "ongoing" ? "unknown" : outcomeStatus)
       : "ongoing";
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("episode_of_care")
       .update({
         status,
@@ -47,17 +55,22 @@ export default function EpisodeStatusEditor({
         outcome_status: nextOutcomeStatus,
         outcome_date: nextOutcomeStatus === "ongoing" ? null : (outcomeDate || null),
       })
-      .eq("id", episodeId);
+      .eq("id", episodeId).select("id").single();
 
     setSaving(false);
+    if (updateError) {
+      setError("Não foi possível guardar o estado. Tenta novamente.");
+      return;
+    }
     setSaved(true);
   };
 
   return (
     <div className="mt-3 flex flex-wrap items-end gap-3">
       <div>
-        <label className="label">Estado</label>
+        <label className="label" htmlFor="episode-status">Estado</label>
         <select
+          id="episode-status"
           className="input"
           value={status}
           onChange={(e) => { setStatus(e.target.value as Status); setSaved(false); }}
@@ -68,31 +81,33 @@ export default function EpisodeStatusEditor({
         </select>
       </div>
       <div>
-        <label className="label">Data de fim</label>
-        <input className="input" type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setSaved(false); }} />
+        <label className="label" htmlFor="episode-end-date">Data de fim</label>
+        <input id="episode-end-date" className="input" type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setSaved(false); }} />
       </div>
       <div>
-        <label className="label">Outcome (analytics)</label>
+        <label className="label" htmlFor="episode-outcome">Resultado do episódio</label>
         <select
+          id="episode-outcome"
           className="input"
           value={isClosed ? outcomeStatus : "ongoing"}
           disabled={!isClosed}
           onChange={(e) => { setOutcomeStatus(e.target.value as OutcomeStatus); setSaved(false); }}
         >
-          <option value="ongoing">ongoing</option>
-          <option value="recovered">recovered</option>
-          <option value="dropout">dropout</option>
-          <option value="referred_out">referred_out</option>
-          <option value="administrative_close">administrative_close</option>
-          <option value="unknown">unknown</option>
+          <option value="ongoing">Em curso</option>
+          <option value="recovered">Recuperado</option>
+          <option value="dropout">Interrompeu acompanhamento</option>
+          <option value="referred_out">Encaminhado</option>
+          <option value="administrative_close">Encerramento administrativo</option>
+          <option value="unknown">Resultado desconhecido</option>
         </select>
       </div>
       <div>
-        <label className="label">Data outcome</label>
-        <input className="input" type="date" value={outcomeDate} disabled={!isClosed} onChange={(e) => { setOutcomeDate(e.target.value); setSaved(false); }} />
+        <label className="label" htmlFor="episode-outcome-date">Data do resultado</label>
+        <input id="episode-outcome-date" className="input" type="date" value={outcomeDate} disabled={!isClosed} onChange={(e) => { setOutcomeDate(e.target.value); setSaved(false); }} />
       </div>
       <button className="btn-brand-primary" onClick={save} disabled={saving}>{saving ? "A guardar..." : "Guardar estado"}</button>
       {saved && <span className="text-sm text-emerald-700">Guardado.</span>}
+      {error && <span className="text-sm text-state-error" role="alert">{error}</span>}
     </div>
   );
 }

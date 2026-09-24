@@ -38,6 +38,7 @@ export default function EpisodeMetadataEditor({
   const [caseType, setCaseType] = useState(initialCaseType ?? "");
   const [laterality, setLaterality] = useState(initialLaterality ?? "");
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   const analyticsLabel = useMemo(
     () => buildAnalyticsLabel({ bodyRegion, conditionType, conditionChronicity }),
@@ -47,7 +48,8 @@ export default function EpisodeMetadataEditor({
 
   const save = async () => {
     setSaving(true);
-    await supabase
+    setMessage("");
+    const { error } = await supabase
       .from("episode_of_care")
       .update({
         title: title.trim(),
@@ -59,22 +61,23 @@ export default function EpisodeMetadataEditor({
         analytics_label: analyticsLabel,
         analytics_included: analyticsIncluded,
       })
-      .eq("id", episodeId);
+      .eq("id", episodeId).select("id").single();
     setSaving(false);
+    setMessage(error ? "Não foi possível guardar os dados do episódio." : "Dados guardados.");
   };
 
   return (
     <div className="mt-4 space-y-3">
       <div>
-        <label className="label">Título do episódio</label>
-        <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <label className="label" htmlFor="episode-title">Título do episódio</label>
+        <input id="episode-title" className="input" value={title} onChange={(e) => { setTitle(e.target.value); setMessage(""); }} />
       </div>
       <div className="rounded-md border border-slate-200 p-3">
         <h2 className="mb-2 text-sm font-semibold text-slate-800">Classificação para métricas</h2>
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <label className="label">Região / zona</label>
-            <select className="input" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)} required>
+            <label className="label" htmlFor="episode-body-region">Região / zona</label>
+            <select id="episode-body-region" className="input" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)} required>
               <option value="">Selecionar</option>
               {BODY_REGION_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -85,8 +88,8 @@ export default function EpisodeMetadataEditor({
             </select>
           </div>
           <div>
-            <label className="label">Tipologia da condição</label>
-            <select className="input" value={conditionType} onChange={(e) => setConditionType(e.target.value)} required>
+            <label className="label" htmlFor="episode-condition">Tipologia da condição</label>
+            <select id="episode-condition" className="input" value={conditionType} onChange={(e) => setConditionType(e.target.value)} required>
               <option value="">Selecionar</option>
               {CONDITION_TYPE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -97,8 +100,8 @@ export default function EpisodeMetadataEditor({
             </select>
           </div>
           <div>
-            <label className="label">Cronologia</label>
-            <select className="input" value={conditionChronicity} onChange={(e) => setConditionChronicity(e.target.value)}>
+            <label className="label" htmlFor="episode-chronicity">Cronologia</label>
+            <select id="episode-chronicity" className="input" value={conditionChronicity} onChange={(e) => setConditionChronicity(e.target.value)}>
               <option value="">Selecionar</option>
               {CONDITION_CHRONICITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -106,8 +109,8 @@ export default function EpisodeMetadataEditor({
             </select>
           </div>
           <div>
-            <label className="label">Tipo de caso</label>
-            <select className="input" value={caseType} onChange={(e) => setCaseType(e.target.value)} required>
+            <label className="label" htmlFor="episode-case-type">Tipo de caso</label>
+            <select id="episode-case-type" className="input" value={caseType} onChange={(e) => setCaseType(e.target.value)} required>
               <option value="">Selecionar</option>
               {CASE_TYPE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -115,8 +118,8 @@ export default function EpisodeMetadataEditor({
             </select>
           </div>
           <div>
-            <label className="label">Lado</label>
-            <select className="input" value={laterality} onChange={(e) => setLaterality(e.target.value)}>
+            <label className="label" htmlFor="episode-laterality">Lado</label>
+            <select id="episode-laterality" className="input" value={laterality} onChange={(e) => setLaterality(e.target.value)}>
               <option value="">Selecionar</option>
               {LATERALITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -129,6 +132,7 @@ export default function EpisodeMetadataEditor({
       </div>
       <div>
         <button className="btn-brand-primary" type="button" onClick={save} disabled={saving || !title.trim() || !bodyRegion.trim() || !conditionType.trim() || !caseType.trim()}>{saving ? "A guardar..." : "Guardar metadados"}</button>
+        {message && <p className="mt-2 text-sm" role="status">{message}</p>}
       </div>
     </div>
   );

@@ -154,16 +154,16 @@ export default function RemindersPanel({
       {isOpen && canCreate && (
         <form className="mb-4 space-y-2 rounded-md border p-3" onSubmit={createReminder}>
           <div>
-            <label className="label">Título</label>
-            <input className="input" onChange={(e) => setTitle(e.target.value)} required value={title} />
+            <label className="label" htmlFor="reminder-title">Título</label>
+            <input id="reminder-title" className="input" onChange={(e) => setTitle(e.target.value)} required value={title} />
           </div>
           <div>
-            <label className="label">Data limite</label>
-            <input className="input" onChange={(e) => setDueDate(e.target.value)} type="date" value={dueDate} />
+            <label className="label" htmlFor="reminder-date">Data limite</label>
+            <input id="reminder-date" className="input" onChange={(e) => setDueDate(e.target.value)} type="date" value={dueDate} />
           </div>
           <div>
-            <label className="label">Nota</label>
-            <textarea className="input min-h-20" onChange={(e) => setMessage(e.target.value)} value={message} />
+            <label className="label" htmlFor="reminder-note">Nota</label>
+            <textarea id="reminder-note" className="input min-h-20" onChange={(e) => setMessage(e.target.value)} value={message} />
           </div>
           <div className="flex gap-2">
             <button className="btn-brand-primary" disabled={saving} type="submit">

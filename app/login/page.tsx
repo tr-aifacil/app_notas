@@ -25,16 +25,16 @@ export default function LoginPage() {
         <h1 className="mb-4 text-xl font-semibold">Login</h1>
         <form onSubmit={onLogin} className="space-y-3">
           <div>
-            <label className="label">Email</label>
-            <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <label className="label" htmlFor="login-email">Email</label>
+            <input id="login-email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div>
-            <label className="label">Password</label>
-            <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <label className="label" htmlFor="login-password">Password</label>
+            <input id="login-password" className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <button className="btn-brand-primary w-full" type="submit">Entrar</button>
         </form>
-        {msg && <p className="mt-3 text-sm text-red-600">{msg}</p>}
+        {msg && <p className="mt-3 text-sm text-red-600" role="alert">{msg}</p>}
         <p className="mt-3 text-sm text-center">
           <a href="/reset-password" className="text-blue-600 hover:underline">Esqueceu a password?</a>
         </p>

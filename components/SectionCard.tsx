@@ -96,7 +96,7 @@ export default function SectionCard(props: Props) {
   };
 
   return (
-    <div className="card space-y-3">
+    <section id={`section-${props.section}-card`} className="card scroll-mt-4 space-y-3">
       <h3 className="text-lg font-semibold">{props.title}</h3>
       {props.description && <p className="text-sm text-brand-muted">{props.description}</p>}
       <div className="flex gap-2">
@@ -109,8 +109,9 @@ export default function SectionCard(props: Props) {
       {error && <p className="text-sm text-state-error">{error}</p>}
 
       <div>
-        <label className="label">{props.title}</label>
+        <label className="label" htmlFor={`section-${props.section}`}>{props.title}</label>
         <textarea
+          id={`section-${props.section}`}
           className="input min-h-40"
           value={props.finalText}
           onChange={(e) => {
@@ -151,6 +152,6 @@ export default function SectionCard(props: Props) {
           {saveError && <span className="text-sm text-state-error">{saveError}</span>}
         </div>
       )}
-    </div>
+    </section>
   );
 }

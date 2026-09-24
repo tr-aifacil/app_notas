@@ -42,11 +42,14 @@ export default function ScalesForm({ episodeId, sessionId }: { episodeId: string
     <form onSubmit={submit} className="card space-y-3">
       <h3 className="text-lg font-semibold">Inserir Escala</h3>
       <div className="grid gap-3 md:grid-cols-3">
-        <select className="input" value={type} onChange={(e) => setType(e.target.value)}>
+        <label className="sr-only" htmlFor="scale-type">Escala</label>
+        <select id="scale-type" className="input" value={type} onChange={(e) => setType(e.target.value)}>
           <option>END</option><option>DASH</option><option>KOOS</option><option>RolandMorris</option><option>NDI</option>
         </select>
-        <input className="input" type="number" value={value} onChange={(e) => setValue(e.target.value)} required />
-        <input className="input" type="date" value={appliedAt} onChange={(e) => setAppliedAt(e.target.value)} required />
+        <label className="sr-only" htmlFor="scale-value">Valor da escala</label>
+        <input id="scale-value" className="input" type="number" value={value} onChange={(e) => setValue(e.target.value)} required />
+        <label className="sr-only" htmlFor="scale-date">Data de aplicação</label>
+        <input id="scale-date" className="input" type="date" value={appliedAt} onChange={(e) => setAppliedAt(e.target.value)} required />
       </div>
       <button className="btn-brand-primary" disabled={saving} type="submit">
         {saving ? <span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" />A guardar...</span> : "Guardar escala"}

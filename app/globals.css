@@ -43,7 +43,11 @@ body {
 }
 
 .input {
-  @apply w-full rounded-md border border-brand-border px-3 py-2 text-sm text-brand-foreground focus:border-brand-primary focus:outline-none;
+  @apply w-full rounded-md border border-brand-border px-3 py-2 text-sm text-brand-foreground focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary;
+}
+
+button:focus-visible, a:focus-visible, select:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-brand-primary;
 }
 
 .label {

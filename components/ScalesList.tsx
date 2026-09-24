@@ -22,13 +22,13 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
 
   const deleteScale = async (id: string) => {
     setDeletingId(id);
-    const { error: deleteError } = await supabase.from("scale_result").delete().eq("id", id);
+    const { error: deleteError } = await supabase.from("scale_result").update({ archived_at: new Date().toISOString() }).eq("id", id).select("id").single();
     setDeletingId(null);
     if (deleteError) {
-      toastError("Erro ao guardar");
+      toastError("Não foi possível arquivar a escala.");
       return;
     }
-    success("Guardado com sucesso");
+    success("Escala arquivada. O administrador pode recuperá-la.");
     setConfirmDeleteId(null);
     router.refresh();
   };
@@ -52,7 +52,7 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
                 disabled={deletingId === s.id}
                 type="button"
               >
-                {deletingId === s.id ? "A guardar..." : "Confirmar"}
+                {deletingId === s.id ? "A arquivar..." : "Confirmar arquivo"}
               </button>
               <button
                 className="btn-brand-secondary py-0.5 px-2 text-xs"
@@ -68,7 +68,7 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
               onClick={() => setConfirmDeleteId(s.id)}
               type="button"
             >
-              Eliminar
+              Arquivar
             </button>
           )}
         </li>
