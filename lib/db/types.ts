@@ -44,8 +44,10 @@ export type Database = {
       };
       scale_result: {
         Row: {
-          id: string; episode_id: string; session_id: string | null; type: "END" | "DASH" | "KOOS" | "RolandMorris" | "NDI";
+          id: string; episode_id: string; session_id: string | null; type: "END" | "DASH" | "QuickDASH" | "KOOS" | "RolandMorris" | "NDI";
           value: number; applied_at: string; created_at: string; archived_at: string | null; archived_by: string | null;
+          score_format: "points_10" | "points_100" | "points_50" | "points_24" | "percent_100" | null;
+          koos_subscale: "pain" | "symptoms" | "adl" | "sport" | "qol" | null;
         };
         Insert: Omit<Database["public"]["Tables"]["scale_result"]["Row"], "id" | "created_at" | "archived_at" | "archived_by"> & { id?: string; created_at?: string; archived_at?: string | null; archived_by?: string | null };
         Update: Partial<Database["public"]["Tables"]["scale_result"]["Row"]>;

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useToast } from "@/components/ToastProvider";
+const MAX_AUDIO_BYTES = 20 * 1024 * 1024;
 
 type Props = {
   section: "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";
@@ -15,7 +16,7 @@ type Props = {
 };
 
 function getBestMimeType(): string {
-  const candidates = ["audio/webm", "audio/mp4", "audio/ogg"];
+  const candidates = ["audio/webm", "audio/mp4"];
   for (const type of candidates) {
     if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(type)) {
       return type;
@@ -70,7 +71,11 @@ export default function SectionCard(props: Props) {
       });
 
       const blob = new Blob(chunksRef.current, { type: mimeType });
-      const ext = mimeType.includes("mp4") ? "mp4" : mimeType.includes("ogg") ? "ogg" : "webm";
+      if (blob.size > MAX_AUDIO_BYTES) {
+        setError("Áudio demasiado longo. Grava um segmento mais curto.");
+        return;
+      }
+      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
       const file = new File([blob], `${props.section}.${ext}`, { type: mimeType });
       const form = new FormData();
       form.append("section", props.section);
@@ -82,7 +87,7 @@ export default function SectionCard(props: Props) {
         setError(json.error || "Erro ao transcrever áudio.");
       } else {
         const transcript = json.transcript || "";
-        props.onChangeTranscript(transcript);
+        props.onChangeTranscript((props.transcript ? `${props.transcript}\n` : "") + transcript);
         props.onChangeFinalText((props.finalText ? `${props.finalText}\n` : "") + transcript);
         setSaved(false);
       }
@@ -99,6 +104,7 @@ export default function SectionCard(props: Props) {
     <section id={`section-${props.section}-card`} className="card scroll-mt-4 space-y-3">
       <h3 className="text-lg font-semibold">{props.title}</h3>
       {props.description && <p className="text-sm text-brand-muted">{props.description}</p>}
+      <p className="text-xs text-brand-muted">A gravação é enviada à OpenAI para transcrição; o áudio não fica guardado na app.</p>
       <div className="flex gap-2">
         {!isRecording ? (
           <button className="btn-brand-secondary" onClick={startRecord} type="button" disabled={busy}>Gravar</button>
@@ -116,7 +122,6 @@ export default function SectionCard(props: Props) {
           value={props.finalText}
           onChange={(e) => {
             props.onChangeFinalText(e.target.value);
-            props.onChangeTranscript(e.target.value);
             setSaved(false);
             setSaveError(null);
           }}
