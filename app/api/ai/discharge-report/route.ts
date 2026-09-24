@@ -8,6 +8,8 @@ export async function POST(req: Request) {
   const serverSupabase = createServerSupabase();
   const { data: { user } } = await serverSupabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { data: profile } = await serverSupabase.from("profile").select("id").eq("id", user.id).single();
+  if (!profile) return NextResponse.json({ error: "Conta sem acesso à app." }, { status: 403 });
 
   try {
     const { episode_id } = await req.json();

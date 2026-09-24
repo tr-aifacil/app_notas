@@ -66,7 +66,7 @@ OPENAI_API_KEY=...
 - Lembretes manuais com histórico; avaliação automática de alertas ainda não implementada.
 - Arquivo recuperável de episódios, sessões e escalas; apenas o administrador pode recuperar registos arquivados.
 - Relatório versionado com `source_snapshot`.
-- Áudio não é guardado; apenas transcrição textual. Os pedidos de áudio são limitados a 20 MiB e as transcrições não são escritas nos logs.
+- Áudio não é guardado; apenas transcrição textual. Os pedidos de áudio são limitados a 4 MiB para caberem nos limites de upload das Vercel Functions, e as transcrições não são escritas nos logs.
 - O relatório de alta envia à OpenAI apenas o texto clínico revisto e as escalas, sem o código interno, a chave do utente ou as transcrições originais. Identificadores inseridos no texto livre continuam a fazer parte do texto enviado; evita-os e revê o relatório.
 
 ## 6) Endpoints

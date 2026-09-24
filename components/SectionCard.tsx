@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useToast } from "@/components/ToastProvider";
-const MAX_AUDIO_BYTES = 20 * 1024 * 1024;
+const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 
 type Props = {
   section: "subjective" | "objective" | "clinical_analysis" | "intervention" | "response" | "plan";

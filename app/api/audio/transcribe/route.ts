@@ -4,7 +4,8 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { getRequiredEnv } from "@/lib/env";
 
 export const runtime = "nodejs";
-const MAX_AUDIO_BYTES = 20 * 1024 * 1024;
+// Fits within Vercel Functions' 4.5 MB request body limit, including multipart overhead.
+const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 const ALLOWED_AUDIO_TYPES = new Set(["audio/webm", "audio/mp4", "audio/mpeg", "audio/mp3", "audio/wav", "audio/x-m4a"]);
 
 export async function POST(req: Request) {
@@ -14,9 +15,11 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "Sessão expirada. Faz login novamente." }, { status: 401 });
     }
+    const { data: profile } = await supabase.from("profile").select("id").eq("id", user.id).single();
+    if (!profile) return NextResponse.json({ error: "Conta sem acesso à app." }, { status: 403 });
 
     const requestBytes = Number(req.headers.get("content-length"));
-    if (requestBytes > MAX_AUDIO_BYTES + 1024 * 1024) {
+    if (requestBytes > MAX_AUDIO_BYTES + 128 * 1024) {
       return NextResponse.json({ error: "Áudio demasiado grande. Grava um segmento mais curto." }, { status: 413 });
     }
 

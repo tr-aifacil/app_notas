@@ -12,6 +12,8 @@ export async function POST(req: Request) {
     const supabase = createServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const { data: profile } = await supabase.from("profile").select("id").eq("id", user.id).single();
+    if (!profile) return NextResponse.json({ error: "Conta sem acesso à app." }, { status: 403 });
 
     if (Number(req.headers.get("content-length")) > 32 * 1024) {
       return NextResponse.json({ error: "Texto demasiado longo." }, { status: 413 });
