@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -33,7 +33,7 @@ export default function NewSessionPage() {
   const supabase = createClient();
   const { success, error: toastError } = useToast();
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const [sessionType, setSessionType] = useState<"avaliacao" | "tratamento" | "reavaliacao" | "alta">("tratamento");
   const [clinician, setClinician] = useState("");
   const [clinicianId, setClinicianId] = useState<string | null>(null);
@@ -48,6 +48,10 @@ export default function NewSessionPage() {
   const [savedGeneral, setSavedGeneral] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
+  const [savingSection, setSavingSection] = useState(false);
+  const pendingSectionsRef = useRef(0);
+  const [finishError, setFinishError] = useState("");
+  const creatingSessionRef = useRef<Promise<string> | null>(null);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -69,9 +73,11 @@ export default function NewSessionPage() {
   }, [supabase]);
 
   const ensureSession = async () => {
-    if (sessionId) return sessionId;
+    if (sessionIdRef.current) return sessionIdRef.current;
+    if (creatingSessionRef.current) return creatingSessionRef.current;
 
-    const { data, error } = await supabase
+    const create = async () => {
+      const { data, error } = await supabase
       .from("session")
       .insert({
         episode_id: params.episodeId,
@@ -95,12 +101,19 @@ export default function NewSessionPage() {
       .select("id")
       .single();
 
-    if (error || !data?.id) {
-      throw new Error(error?.message || "Não foi possível criar a sessão.");
-    }
+      if (error || !data?.id) {
+        throw new Error(error?.message || "Não foi possível criar a sessão.");
+      }
 
-    setSessionId(data.id);
-    return data.id;
+      sessionIdRef.current = data.id;
+      return data.id;
+    };
+    creatingSessionRef.current = create();
+    try {
+      return await creatingSessionRef.current;
+    } finally {
+      creatingSessionRef.current = null;
+    }
   };
 
   const saveGeneral = async () => {
@@ -136,26 +149,56 @@ export default function NewSessionPage() {
   };
 
   const saveSection = (key: S) => async (transcript: string, finalText: string) => {
-    const id = await ensureSession();
-    const { error } = await supabase
-      .from("session")
-      .update({
-        [key]: finalText,
-        [`${key}_transcript`]: transcript,
-      })
-      .eq("id", id);
-
-    if (error) {
-      throw new Error(error.message);
+    pendingSectionsRef.current += 1;
+    setSavingSection(true);
+    try {
+      const id = await ensureSession();
+      const { error } = await supabase
+        .from("session")
+        .update({ [key]: finalText, [`${key}_transcript`]: transcript })
+        .eq("id", id).select("id").single();
+      if (error) throw new Error(error.message);
+    } finally {
+      pendingSectionsRef.current -= 1;
+      setSavingSection(pendingSectionsRef.current > 0);
     }
   };
 
   const finish = async () => {
+    if (pendingSectionsRef.current > 0 || savingGeneral || finishing) return;
     setFinishing(true);
-    await ensureSession();
-    success("Guardado com sucesso");
-    setFinishing(false);
-    router.push(`/episodes/${params.episodeId}`);
+    setFinishError("");
+    try {
+      if (!sessionDate || !clinician.trim()) throw new Error("Indica a data e o clínico antes de concluir.");
+      const id = await ensureSession();
+      const { error } = await supabase.from("session").update({
+        date: sessionDate,
+        clinician: clinician.trim(),
+        clinician_id: clinicianId,
+        type: sessionType,
+        subjective: finalTexts.subjective,
+        objective: finalTexts.objective,
+        clinical_analysis: finalTexts.clinical_analysis,
+        intervention: finalTexts.intervention,
+        response: finalTexts.response,
+        plan: finalTexts.plan,
+        subjective_transcript: transcripts.subjective,
+        objective_transcript: transcripts.objective,
+        clinical_analysis_transcript: transcripts.clinical_analysis,
+        intervention_transcript: transcripts.intervention,
+        response_transcript: transcripts.response,
+        plan_transcript: transcripts.plan
+      }).eq("id", id).select("id").single();
+      if (error) throw new Error("Não foi possível guardar a sessão. Mantém esta página aberta e tenta novamente.");
+      success("Sessão guardada com sucesso");
+      router.push(`/episodes/${params.episodeId}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Não foi possível guardar a sessão.";
+      setFinishError(message);
+      toastError(message);
+    } finally {
+      setFinishing(false);
+    }
   };
 
   return (
@@ -166,13 +209,19 @@ export default function NewSessionPage() {
           <Link className="link-brand-muted" href={`/episodes/${params.episodeId}`}>← Voltar</Link>
         </div>
         <h1 className="text-2xl font-semibold">Registo de Sessão Clínica</h1>
+        <nav className="flex flex-wrap gap-2" aria-label="Secções da sessão">
+          {sections.map((section) => (
+            <a className="btn-brand-outline" href={`#section-${section.key}-card`} key={section.key}>{section.title}</a>
+          ))}
+        </nav>
 
         <div className="card space-y-3">
           <h3 className="text-lg font-semibold">Dados gerais</h3>
           <div className="grid gap-3 md:grid-cols-3">
             <div>
-              <label className="label">Tipo de sessão</label>
+              <label className="label" htmlFor="session-type">Tipo de sessão</label>
               <select
+                id="session-type"
                 className="input"
                 value={sessionType}
                 onChange={(e) => { setSessionType(e.target.value as typeof sessionType); setSavedGeneral(false); setGeneralError(null); }}
@@ -184,16 +233,18 @@ export default function NewSessionPage() {
               </select>
             </div>
             <div>
-              <label className="label">Clínico</label>
+              <label className="label" htmlFor="session-clinician">Clínico</label>
               <input
+                id="session-clinician"
                 className="input"
                 value={clinician}
                 onChange={(e) => { setClinician(e.target.value); setSavedGeneral(false); setGeneralError(null); }}
               />
             </div>
             <div>
-              <label className="label">Data</label>
+              <label className="label" htmlFor="session-date">Data</label>
               <input
+                id="session-date"
                 className="input"
                 type="date"
                 value={sessionDate}
@@ -221,14 +272,14 @@ export default function NewSessionPage() {
             onChangeTranscript={(v) => setTranscripts((p) => ({ ...p, [s.key]: v }))}
             onChangeFinalText={(v) => {
               setFinalTexts((p) => ({ ...p, [s.key]: v }));
-              setTranscripts((p) => ({ ...p, [s.key]: v }));
             }}
             onSave={saveSection(s.key)}
           />
         ))}
 
         <div className="flex justify-end pb-6 pt-2">
-          <button className="btn-brand-primary px-8 py-3 text-lg" disabled={finishing} onClick={finish} type="button">
+          {finishError && <p className="mr-3 text-sm text-state-error" role="alert">{finishError}</p>}
+          <button className="btn-brand-primary px-8 py-3 text-lg" disabled={finishing || savingSection || savingGeneral} onClick={finish} type="button">
             {finishing ? <span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" />A guardar...</span> : "Concluir sessão"}
           </button>
         </div>

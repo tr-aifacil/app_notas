@@ -13,16 +13,25 @@ import StatusBadge from "@/components/StatusBadge";
 import EpisodeMetadataEditor from "@/components/EpisodeMetadataEditor";
 import EpisodeClassificationBadges from "@/components/EpisodeClassificationBadges";
 import { formatDatePT } from "@/lib/utils/formatDate";
+import EpisodeArchivePanel from "@/components/EpisodeArchivePanel";
+import { notFound } from "next/navigation";
 
 export default async function EpisodePage({ params }: { params: { episodeId: string } }) {
   const supabase = createServerSupabase();
   const { data: userData } = await supabase.auth.getUser();
 
-  const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", params.episodeId).single();
-  const { data: sessions } = await supabase.from("session").select("*").eq("episode_id", params.episodeId).order("date", { ascending: false });
-  const { data: scales } = await supabase.from("scale_result").select("*").eq("episode_id", params.episodeId).order("applied_at", { ascending: false });
+  const { data: episode } = await supabase.from("episode_of_care").select("*").eq("id", params.episodeId).is("archived_at", null).single();
+  if (!episode) notFound();
+  const { data: profile } = userData.user ? await supabase.from("profile").select("role").eq("id", userData.user.id).single() : { data: null };
+  const isAdmin = profile?.role === "admin";
+  const { data: sessions } = await supabase.from("session").select("*").eq("episode_id", params.episodeId).is("archived_at", null).order("date", { ascending: false });
+  const { data: scales } = await supabase.from("scale_result").select("*").eq("episode_id", params.episodeId).is("archived_at", null).order("applied_at", { ascending: false });
   const { data: alerts } = await supabase.from("alert_log").select("*").eq("episode_id", params.episodeId).order("created_at", { ascending: false });
   const { data: reports } = await supabase.from("discharge_report_version").select("*").eq("episode_id", params.episodeId).order("generated_at", { ascending: false });
+  const [archivedSessions, archivedScales] = isAdmin ? await Promise.all([
+    supabase.from("session").select("id, date").eq("episode_id", params.episodeId).not("archived_at", "is", null),
+    supabase.from("scale_result").select("id, type, applied_at").eq("episode_id", params.episodeId).not("archived_at", "is", null)
+  ]) : [{ data: [] }, { data: [] }];
 
   return (
     <>
@@ -94,6 +103,7 @@ export default async function EpisodePage({ params }: { params: { episodeId: str
           </div>
 
           <DischargeReportEditor episodeId={params.episodeId} reports={reports || []} generatedBy={userData.user?.email || "clinician"} />
+          {isAdmin && <EpisodeArchivePanel sessions={archivedSessions.data || []} scales={archivedScales.data || []} />}
         </section>
 
         <aside className="space-y-4">

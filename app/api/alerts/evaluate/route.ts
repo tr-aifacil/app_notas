@@ -6,6 +6,5 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  await req.json();
-  return NextResponse.json({ ok: true, skipped: true });
+  return NextResponse.json({ error: "Avaliação automática de alertas ainda não disponível." }, { status: 501 });
 }

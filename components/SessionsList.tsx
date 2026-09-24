@@ -39,13 +39,13 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
 
   const deleteSession = async (sessionId: string) => {
     setDeletingId(sessionId);
-    const { error: deleteError } = await supabase.from("session").delete().eq("id", sessionId);
+    const { error: deleteError } = await supabase.from("session").update({ archived_at: new Date().toISOString() }).eq("id", sessionId).select("id").single();
     setDeletingId(null);
     if (deleteError) {
-      toastError("Erro ao guardar");
+      toastError("Não foi possível arquivar a sessão.");
       return;
     }
-    success("Guardado com sucesso");
+    success("Sessão arquivada. O administrador pode recuperá-la.");
     setConfirmDeleteId(null);
     router.refresh();
   };
@@ -80,7 +80,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
                     disabled={deletingId === s.id}
                     type="button"
                   >
-                    {deletingId === s.id ? "A guardar..." : "Confirmar"}
+                    {deletingId === s.id ? "A arquivar..." : "Confirmar arquivo"}
                   </button>
                   <button
                     className="btn-brand-secondary px-3 py-1.5 text-xs"
@@ -96,7 +96,7 @@ export default function SessionsList({ sessions, episodeId }: { sessions: Sessio
                   onClick={() => setConfirmDeleteId(s.id)}
                   type="button"
                 >
-                  Eliminar
+                  Arquivar
                 </button>
               )}
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import SectionCard from "@/components/SectionCard";
 import BackButton from "@/components/BackButton";
@@ -29,6 +29,7 @@ const sections: { key: S; title: string; description?: string }[] = [
 
 export default function EditSessionPage() {
   const params = useParams<{ episodeId: string; sessionId: string }>();
+  const router = useRouter();
   const supabase = createClient();
   const { success, error: toastError } = useToast();
 
@@ -46,6 +47,11 @@ export default function EditSessionPage() {
   const [savingGeneral, setSavingGeneral] = useState(false);
   const [savedGeneral, setSavedGeneral] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [savingAll, setSavingAll] = useState(false);
+  const [savingSection, setSavingSection] = useState(false);
+  const pendingSectionsRef = useRef(0);
+  const [saveAllError, setSaveAllError] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -54,6 +60,8 @@ export default function EditSessionPage() {
           .from("session")
           .select("*")
           .eq("id", params.sessionId)
+          .eq("episode_id", params.episodeId)
+          .is("archived_at", null)
           .single(),
         supabase.auth.getUser(),
       ]);
@@ -79,6 +87,8 @@ export default function EditSessionPage() {
           response: sessionData.response ?? sessionData.response_transcript ?? "",
           plan: sessionData.plan ?? sessionData.plan_transcript ?? "",
         });
+      } else {
+        setLoadError("Sessão não encontrada ou sem acesso.");
       }
       setLoading(false);
     };
@@ -99,7 +109,7 @@ export default function EditSessionPage() {
           clinician_id: clinicianId,
           date: sessionDate || undefined
         })
-        .eq("id", params.sessionId);
+        .eq("id", params.sessionId).eq("episode_id", params.episodeId).select("id").single();
 
       if (error) {
         throw new Error(error.message);
@@ -117,20 +127,58 @@ export default function EditSessionPage() {
   };
 
   const saveSection = (key: S) => async (transcript: string, finalText: string) => {
-    const { error } = await supabase
-      .from("session")
-      .update({
-        [key]: finalText,
-        [`${key}_transcript`]: transcript,
-      })
-      .eq("id", params.sessionId);
+    pendingSectionsRef.current += 1;
+    setSavingSection(true);
+    try {
+      const { error } = await supabase
+        .from("session")
+        .update({ [key]: finalText, [`${key}_transcript`]: transcript })
+        .eq("id", params.sessionId).eq("episode_id", params.episodeId).select("id").single();
+      if (error) throw new Error(error.message);
+    } finally {
+      pendingSectionsRef.current -= 1;
+      setSavingSection(pendingSectionsRef.current > 0);
+    }
+  };
 
-    if (error) {
-      throw new Error(error.message);
+  const saveAll = async () => {
+    if (savingAll || savingGeneral || pendingSectionsRef.current > 0) return;
+    setSavingAll(true);
+    setSaveAllError("");
+    try {
+      if (!sessionDate || !clinician.trim()) throw new Error("Indica a data e o clínico antes de guardar.");
+      const { error } = await supabase.from("session").update({
+        date: sessionDate,
+        clinician: clinician.trim(),
+        clinician_id: clinicianId,
+        type: sessionType,
+        subjective: finalTexts.subjective,
+        objective: finalTexts.objective,
+        clinical_analysis: finalTexts.clinical_analysis,
+        intervention: finalTexts.intervention,
+        response: finalTexts.response,
+        plan: finalTexts.plan,
+        subjective_transcript: transcripts.subjective,
+        objective_transcript: transcripts.objective,
+        clinical_analysis_transcript: transcripts.clinical_analysis,
+        intervention_transcript: transcripts.intervention,
+        response_transcript: transcripts.response,
+        plan_transcript: transcripts.plan
+      }).eq("id", params.sessionId).eq("episode_id", params.episodeId).select("id").single();
+      if (error) throw new Error("Não foi possível guardar. Mantém esta página aberta e tenta novamente.");
+      success("Sessão guardada com sucesso");
+      router.push(`/episodes/${params.episodeId}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Não foi possível guardar a sessão.";
+      setSaveAllError(message);
+      toastError(message);
+    } finally {
+      setSavingAll(false);
     }
   };
 
   if (loading) return <main className="container-page"><p className="text-brand-muted">A carregar...</p></main>;
+  if (loadError) return <main className="container-page"><p role="alert">{loadError}</p></main>;
 
   return (
     <>
@@ -140,13 +188,19 @@ export default function EditSessionPage() {
         <BackButton fallbackHref={`/episodes/${params.episodeId}`} />
         <h1 className="text-2xl font-semibold">Editar Sessão</h1>
       </div>
+      <nav className="flex flex-wrap gap-2" aria-label="Secções da sessão">
+        {sections.map((section) => (
+          <a className="btn-brand-outline" href={`#section-${section.key}-card`} key={section.key}>{section.title}</a>
+        ))}
+      </nav>
 
       <div className="card space-y-3">
         <h3 className="text-lg font-semibold">Dados gerais</h3>
         <div className="grid gap-3 md:grid-cols-3">
           <div>
-            <label className="label">Tipo de sessão</label>
+            <label className="label" htmlFor="session-type">Tipo de sessão</label>
             <select
+              id="session-type"
               className="input"
               value={sessionType}
               onChange={(e) => { setSessionType(e.target.value as typeof sessionType); setSavedGeneral(false); setGeneralError(null); }}
@@ -158,16 +212,18 @@ export default function EditSessionPage() {
             </select>
           </div>
           <div>
-            <label className="label">Clínico</label>
+            <label className="label" htmlFor="session-clinician">Clínico</label>
             <input
+              id="session-clinician"
               className="input"
               value={clinician}
               onChange={(e) => { setClinician(e.target.value); setSavedGeneral(false); setGeneralError(null); }}
             />
           </div>
           <div>
-            <label className="label">Data</label>
+            <label className="label" htmlFor="session-date">Data</label>
             <input
+              id="session-date"
               className="input"
               type="date"
               value={sessionDate}
@@ -193,15 +249,19 @@ export default function EditSessionPage() {
           transcript={transcripts[s.key]}
           finalText={finalTexts[s.key]}
           onChangeTranscript={(v) => setTranscripts((p) => ({ ...p, [s.key]: v }))}
-          onChangeFinalText={(v) => {
-            setFinalTexts((p) => ({ ...p, [s.key]: v }));
-            setTranscripts((p) => ({ ...p, [s.key]: v }));
-          }}
+            onChangeFinalText={(v) => {
+              setFinalTexts((p) => ({ ...p, [s.key]: v }));
+            }}
           onSave={saveSection(s.key)}
         />
       ))}
 
-      <div className="pb-6" />
+      <div className="flex items-center justify-end gap-3 pb-6">
+        {saveAllError && <p className="text-sm text-state-error" role="alert">{saveAllError}</p>}
+        <button className="btn-brand-primary" disabled={savingAll || savingGeneral || savingSection} onClick={saveAll} type="button">
+          {savingAll ? "A guardar..." : "Guardar sessão e voltar"}
+        </button>
+      </div>
       </main>
     </>
   );

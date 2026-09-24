@@ -7,11 +7,12 @@ export async function generateDischargeReport(snapshot: unknown) {
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0,
+    max_tokens: 4096,
     messages: [
       {
         role: "system",
         content:
-          "Redige um relatório clínico formal em português de Portugal, usando apenas os dados fornecidos no JSON. Não inventes nem inferes. Se faltar informação, escreve 'Não registado'. Não menciones que foste gerado por AI. Usa sempre o código do cliente para identificação e mantém o nome do paciente como placeholder '[NOME_INTERNO_APP]' no relatório."
+          "Redige um relatório clínico formal em português de Portugal, usando apenas os dados fornecidos no JSON. Não inventes nem infiras. Se faltar informação, escreve 'Não registado'. Mantém o código do utente como placeholder '[CODIGO_UTENTE]' e o nome como '[NOME_INTERNO_APP]' no relatório. O clínico revê o texto antes de o utilizar."
       },
       {
         role: "user",

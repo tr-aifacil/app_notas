@@ -87,8 +87,8 @@ export default function NewEpisodePage() {
           </div>
           <form onSubmit={onSubmit} className="space-y-3">
             <div>
-              <label className="label">Título do episódio</label>
-              <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <label className="label" htmlFor="new-episode-title">Título do episódio</label>
+              <input id="new-episode-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required />
               <p className="text-xs text-slate-500">Título clínico legível para a equipa.</p>
             </div>
 
@@ -96,8 +96,8 @@ export default function NewEpisodePage() {
               <h2 className="mb-2 text-sm font-semibold text-slate-800">Classificação para métricas</h2>
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <label className="label">Região / zona</label>
-                  <select className="input" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)} required>
+                  <label className="label" htmlFor="new-episode-region">Região / zona</label>
+                  <select id="new-episode-region" className="input" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)} required>
                     <option value="">Selecionar</option>
                     {BODY_REGION_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -108,8 +108,8 @@ export default function NewEpisodePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">Tipologia da condição</label>
-                  <select className="input" value={conditionType} onChange={(e) => setConditionType(e.target.value)} required>
+                  <label className="label" htmlFor="new-episode-condition">Tipologia da condição</label>
+                  <select id="new-episode-condition" className="input" value={conditionType} onChange={(e) => setConditionType(e.target.value)} required>
                     <option value="">Selecionar</option>
                     {CONDITION_TYPE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -120,8 +120,8 @@ export default function NewEpisodePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">Cronologia</label>
-                  <select className="input" value={conditionChronicity} onChange={(e) => setConditionChronicity(e.target.value)}>
+                  <label className="label" htmlFor="new-episode-chronicity">Cronologia</label>
+                  <select id="new-episode-chronicity" className="input" value={conditionChronicity} onChange={(e) => setConditionChronicity(e.target.value)}>
                     <option value="">Selecionar</option>
                     {CONDITION_CHRONICITY_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -129,8 +129,8 @@ export default function NewEpisodePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">Tipo de caso</label>
-                  <select className="input" value={caseType} onChange={(e) => setCaseType(e.target.value)} required>
+                  <label className="label" htmlFor="new-episode-case">Tipo de caso</label>
+                  <select id="new-episode-case" className="input" value={caseType} onChange={(e) => setCaseType(e.target.value)} required>
                     <option value="">Selecionar</option>
                     {CASE_TYPE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -138,8 +138,8 @@ export default function NewEpisodePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">Lado</label>
-                  <select className="input" value={laterality} onChange={(e) => setLaterality(e.target.value)}>
+                  <label className="label" htmlFor="new-episode-side">Lado</label>
+                  <select id="new-episode-side" className="input" value={laterality} onChange={(e) => setLaterality(e.target.value)}>
                     <option value="">Selecionar</option>
                     {LATERALITY_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -151,9 +151,9 @@ export default function NewEpisodePage() {
               <p className="text-sm text-slate-700">Conta para métricas de recuperação: {analyticsIncluded ? "Sim" : "Não"}</p>
             </div>
 
-            <div><label className="label">Profissão</label><input className="input" value={profession} onChange={(e) => setProfession(e.target.value)} required /></div>
-            <div><label className="label">Área</label><input className="input" value={area} onChange={(e) => setArea(e.target.value)} required /></div>
-            <div><label className="label">Data início</label><input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required /></div>
+            <div><label className="label" htmlFor="new-episode-profession">Profissão</label><input id="new-episode-profession" className="input" value={profession} onChange={(e) => setProfession(e.target.value)} required /></div>
+            <div><label className="label" htmlFor="new-episode-area">Área</label><input id="new-episode-area" className="input" value={area} onChange={(e) => setArea(e.target.value)} required /></div>
+            <div><label className="label" htmlFor="new-episode-start">Data início</label><input id="new-episode-start" className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required /></div>
             <button className="btn-brand-primary" disabled={creatingEpisode} type="submit">
               {creatingEpisode ? "A guardar..." : "Criar episódio"}
             </button>

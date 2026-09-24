@@ -26,20 +26,25 @@ export default function DischargeReportEditor({
 
   const generate = async () => {
     setGenerating(true);
-    const res = await fetch("/api/ai/discharge-report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ episode_id: episodeId })
-    });
-    const json = await res.json();
-    setGenerating(false);
-    if (!res.ok) {
-      toastError("Erro ao guardar");
-      return;
+    try {
+      const res = await fetch("/api/ai/discharge-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ episode_id: episodeId })
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toastError(json.error || "Não foi possível gerar o relatório.");
+        return;
+      }
+      setContent(json.content || "");
+      success("Relatório gerado e guardado");
+      location.reload();
+    } catch {
+      toastError("Erro de ligação ao gerar o relatório.");
+    } finally {
+      setGenerating(false);
     }
-    setContent(json.content || "");
-    success("Guardado com sucesso");
-    location.reload();
   };
 
   const saveVersion = async () => {
@@ -65,12 +70,14 @@ export default function DischargeReportEditor({
   return (
     <div className="card space-y-3">
       <h3 className="text-lg font-semibold">Relatório de Alta (versionado)</h3>
+      <p className="text-sm text-brand-muted">Ao gerar, o texto clínico editado e as escalas são enviados à OpenAI. O código interno é substituído por um marcador e as transcrições originais não são enviadas. Evita nomes e outros identificadores no texto livre. Revê o relatório antes de o utilizar.</p>
       <div className="flex gap-2">
         <button className="btn-brand-primary" disabled={generating} onClick={generate}>
           {generating ? <span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" />A guardar...</span> : "Gerar Relatório de Alta"}
         </button>
       </div>
-      <textarea className="input min-h-64" value={content} onChange={(e) => setContent(e.target.value)} />
+      <label className="label" htmlFor="report-content">Texto do relatório para revisão</label>
+      <textarea id="report-content" className="input min-h-64" value={content} onChange={(e) => setContent(e.target.value)} />
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={isFinal} onChange={(e) => setIsFinal(e.target.checked)} />
         Marcar como final

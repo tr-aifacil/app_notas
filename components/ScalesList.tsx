@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatDatePT } from "@/lib/utils/formatDate";
 import { useToast } from "@/components/ToastProvider";
+import { KOOS_SUBSCALES, SCALE_LABELS, scoreUnit, type KoosSubscale, type ScaleType } from "@/lib/scales/definitions";
 
 type Scale = {
   id: string;
   type: string;
   value: number;
   applied_at: string;
+  score_format: string | null;
+  koos_subscale: string | null;
 };
 
 export default function ScalesList({ scales }: { scales: Scale[] }) {
@@ -22,13 +25,13 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
 
   const deleteScale = async (id: string) => {
     setDeletingId(id);
-    const { error: deleteError } = await supabase.from("scale_result").delete().eq("id", id);
+    const { error: deleteError } = await supabase.from("scale_result").update({ archived_at: new Date().toISOString() }).eq("id", id).select("id").single();
     setDeletingId(null);
     if (deleteError) {
-      toastError("Erro ao guardar");
+      toastError("Não foi possível arquivar a escala.");
       return;
     }
-    success("Guardado com sucesso");
+    success("Escala arquivada. O administrador pode recuperá-la.");
     setConfirmDeleteId(null);
     router.refresh();
   };
@@ -42,7 +45,7 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
       {scales.map((s) => (
         <li key={s.id} className="flex items-center justify-between gap-2 border-b py-1">
           <span>
-            {s.type}: {s.value} ({formatDatePT(s.applied_at)})
+            {SCALE_LABELS[s.type as ScaleType] || s.type}{s.koos_subscale ? ` · ${KOOS_SUBSCALES[s.koos_subscale as KoosSubscale] || s.koos_subscale}` : ""}: {s.value} {scoreUnit(s.score_format)} ({formatDatePT(s.applied_at)})
           </span>
           {confirmDeleteId === s.id ? (
             <span className="flex items-center gap-1">
@@ -52,7 +55,7 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
                 disabled={deletingId === s.id}
                 type="button"
               >
-                {deletingId === s.id ? "A guardar..." : "Confirmar"}
+                {deletingId === s.id ? "A arquivar..." : "Confirmar arquivo"}
               </button>
               <button
                 className="btn-brand-secondary py-0.5 px-2 text-xs"
@@ -68,7 +71,7 @@ export default function ScalesList({ scales }: { scales: Scale[] }) {
               onClick={() => setConfirmDeleteId(s.id)}
               type="button"
             >
-              Eliminar
+              Arquivar
             </button>
           )}
         </li>

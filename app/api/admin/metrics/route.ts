@@ -29,10 +29,13 @@ export async function GET(req: NextRequest) {
     const supabase = createAdminSupabase();
     const { data: allRowsData } = await supabase.from("admin_episode_metrics_v1").select("*");
     const { data: qualityRowsData } = await supabase.from("admin_data_quality_v1").select("*");
+    const { data: activeEpisodeData, error: activeEpisodeError } = await supabase.from("episode_of_care").select("id").is("archived_at", null);
+    if (activeEpisodeError) return NextResponse.json({ error: "Erro ao carregar episódios" }, { status: 500 });
     const { data: cliniciansData } = await supabase.from("profile").select("id, display_name");
 
-    const allRows = (allRowsData as EpisodeMetricRow[] | null) || [];
-    const qualityRows = (qualityRowsData as DataQualityRow[] | null) || [];
+    const activeIds = new Set((activeEpisodeData || []).map((episode) => episode.id));
+    const allRows = ((allRowsData as EpisodeMetricRow[] | null) || []).filter((row) => activeIds.has(row.episode_id));
+    const qualityRows = ((qualityRowsData as DataQualityRow[] | null) || []).filter((row) => activeIds.has(row.episode_id));
     const clinicians: Array<Database["public"]["Tables"]["profile"]["Row"]> = (cliniciansData as Array<Database["public"]["Tables"]["profile"]["Row"]> | null) || [];
     const clinicianMap = new Map(clinicians.map((c) => [c.id, c.display_name]));
 

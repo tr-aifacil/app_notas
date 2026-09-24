@@ -3,15 +3,27 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
 import EpisodeClassificationBadges from "@/components/EpisodeClassificationBadges";
+import PatientAdminPanel from "@/components/PatientAdminPanel";
+import { notFound } from "next/navigation";
 
 export default async function PatientDetail({ params }: { params: { patientId: string } }) {
   const supabase = createServerSupabase();
   const { data: patient } = await supabase.from("patient").select("*").eq("id", params.patientId).single();
+  if (!patient) notFound();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: ownProfile } = user ? await supabase.from("profile").select("role").eq("id", user.id).single() : { data: null };
+  const isAdmin = ownProfile?.role === "admin";
   const { data: episodes } = await supabase
     .from("episode_of_care")
     .select("*")
     .eq("patient_id", params.patientId)
+    .is("archived_at", null)
     .order("start_date", { ascending: false });
+  const [cliniciansResult, accessResult, archivedResult] = isAdmin ? await Promise.all([
+    supabase.from("profile").select("id, display_name").eq("role", "clinician").order("display_name"),
+    supabase.from("patient_access").select("clinician_id").eq("patient_id", params.patientId),
+    supabase.from("episode_of_care").select("id, title").eq("patient_id", params.patientId).not("archived_at", "is", null)
+  ]) : [{ data: [] }, { data: [] }, { data: [] }];
 
   return (
     <main className="container-page space-y-4">
@@ -64,6 +76,8 @@ export default async function PatientDetail({ params }: { params: { patientId: s
           {episodes?.length === 0 && <li className="text-sm text-slate-500">Sem episódios registados.</li>}
         </ul>
       </section>
+
+      {isAdmin && <PatientAdminPanel patientId={patient.id} clinicians={cliniciansResult.data || []} access={accessResult.data || []} archivedEpisodes={archivedResult.data || []} />}
     </main>
   );
 }

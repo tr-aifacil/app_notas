@@ -16,6 +16,7 @@ export type Database = {
           start_date: string; end_date: string | null; status: "ativo" | "alta" | "administrativo";
           outcome_status: "ongoing" | "recovered" | "dropout" | "referred_out" | "administrative_close" | "unknown";
           outcome_date: string | null;
+          archived_at: string | null; archived_by: string | null;
           created_at: string;
         };
         Insert: {
@@ -25,6 +26,7 @@ export type Database = {
           start_date: string; end_date?: string | null; status?: "ativo" | "alta" | "administrativo";
           outcome_status?: "ongoing" | "recovered" | "dropout" | "referred_out" | "administrative_close" | "unknown";
           outcome_date?: string | null;
+          archived_at?: string | null; archived_by?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["episode_of_care"]["Row"]>;
@@ -35,16 +37,19 @@ export type Database = {
           subjective: string; objective: string; clinical_analysis: string; intervention: string; response: string; plan: string;
           subjective_transcript: string; objective_transcript: string; clinical_analysis_transcript: string;
           intervention_transcript: string; response_transcript: string; plan_transcript: string; created_at: string;
+          archived_at: string | null; archived_by: string | null;
         };
-        Insert: Omit<Database["public"]["Tables"]["session"]["Row"], "id" | "created_at"> & { id?: string; created_at?: string };
+        Insert: Omit<Database["public"]["Tables"]["session"]["Row"], "id" | "created_at" | "archived_at" | "archived_by"> & { id?: string; created_at?: string; archived_at?: string | null; archived_by?: string | null };
         Update: Partial<Database["public"]["Tables"]["session"]["Row"]>;
       };
       scale_result: {
         Row: {
-          id: string; episode_id: string; session_id: string | null; type: "END" | "DASH" | "KOOS" | "RolandMorris" | "NDI";
-          value: number; applied_at: string; created_at: string;
+          id: string; episode_id: string; session_id: string | null; type: "END" | "DASH" | "QuickDASH" | "KOOS" | "RolandMorris" | "NDI";
+          value: number; applied_at: string; created_at: string; archived_at: string | null; archived_by: string | null;
+          score_format: "points_10" | "points_100" | "points_50" | "points_24" | "percent_100" | null;
+          koos_subscale: "pain" | "symptoms" | "adl" | "sport" | "qol" | null;
         };
-        Insert: Omit<Database["public"]["Tables"]["scale_result"]["Row"], "id" | "created_at"> & { id?: string; created_at?: string };
+        Insert: Omit<Database["public"]["Tables"]["scale_result"]["Row"], "id" | "created_at" | "archived_at" | "archived_by"> & { id?: string; created_at?: string; archived_at?: string | null; archived_by?: string | null };
         Update: Partial<Database["public"]["Tables"]["scale_result"]["Row"]>;
       };
       alert_log: {
@@ -67,6 +72,11 @@ export type Database = {
         Row: { id: string; display_name: string; role: "admin" | "clinician"; created_at: string };
         Insert: { id: string; display_name: string; role?: "admin" | "clinician"; created_at?: string };
         Update: Partial<{ id: string; display_name: string; role: "admin" | "clinician"; created_at: string }>;
+      };
+      patient_access: {
+        Row: { patient_id: string; clinician_id: string; created_at: string };
+        Insert: { patient_id: string; clinician_id: string; created_at?: string };
+        Update: Partial<{ patient_id: string; clinician_id: string; created_at: string }>;
       };
     };
     Views: {
