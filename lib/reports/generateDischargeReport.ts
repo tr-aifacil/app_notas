@@ -5,9 +5,9 @@ export async function generateDischargeReport(snapshot: unknown) {
   const client = new OpenAI({ apiKey: getRequiredEnv("OPENAI_API_KEY") });
 
   const completion = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0,
-    max_tokens: 4096,
+    model: "gpt-6-luna",
+    reasoning_effort: "none",
+    max_completion_tokens: 4096,
     messages: [
       {
         role: "system",
@@ -23,5 +23,9 @@ export async function generateDischargeReport(snapshot: unknown) {
     ]
   });
 
-  return completion.choices[0]?.message?.content ?? "";
+  const result = completion.choices[0];
+  if (result?.finish_reason !== "stop" || !result.message.content?.trim()) {
+    throw new Error("O relatório gerado está vazio ou incompleto.");
+  }
+  return result.message.content;
 }
