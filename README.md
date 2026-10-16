@@ -57,6 +57,13 @@ OPENAI_API_KEY=...
 9. Gerar relatório de alta
 10. Editar e guardar nova versão (opção final)
 
+### Modelos OpenAI
+
+- Organização de notas e relatório de alta: `gpt-6-luna` (Chat Completions, sem raciocínio adicional, para manter o custo baixo). O relatório incompleto não é guardado.
+- Transcrição de ficheiros de áudio: `gpt-transcribe`. Mantém o mesmo endpoint e o mesmo formato de resposta da app.
+- Antes de disponibilizar a migração, testar com dados fictícios em português de Portugal: transcrição de fala com termos clínicos, organização de cada secção com campos vazios para informação ausente e relatório de alta com as oito secções. Confirmar que números, escalas e nomes não são inventados; o clínico deve rever o resultado.
+- A chave `OPENAI_API_KEY` continua apenas no servidor. Confirmar que o projeto OpenAI tem acesso aos modelos e saldo disponível; testar as três funções no ambiente de produção depois do deploy.
+
 ## 5) Regras clínicas implementadas
 
 - Dados clínicos estruturados em BD.

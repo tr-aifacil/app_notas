@@ -27,9 +27,9 @@ export async function POST(req: Request) {
 
     const client = new OpenAI({ apiKey: getRequiredEnv("OPENAI_API_KEY") });
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0,
-      max_tokens: 4096,
+      model: "gpt-6-luna",
+      reasoning_effort: "none",
+      max_completion_tokens: 4096,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: prompt.system },
@@ -37,7 +37,11 @@ export async function POST(req: Request) {
       ]
     });
 
-    const raw = completion.choices[0]?.message?.content || "{}";
+    const result = completion.choices[0];
+    if (result?.finish_reason !== "stop" || !result.message.content?.trim()) {
+      return NextResponse.json({ error: "Resposta incompleta da IA. Tenta novamente." }, { status: 502 });
+    }
+    const raw = result.message.content;
     let parsed: unknown;
     try {
       parsed = JSON.parse(raw);

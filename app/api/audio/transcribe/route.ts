@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
     const client = new OpenAI({ apiKey: getRequiredEnv("OPENAI_API_KEY") });
     const transcript = await client.audio.transcriptions.create({
-      model: "gpt-4o-mini-transcribe",
+      model: "gpt-transcribe",
       file: audio
     });
 
