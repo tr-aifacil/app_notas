@@ -11,7 +11,7 @@ type Clinician = { id: string; display_name: string };
 
 export default function PatientsPage() {
   const supabase = createClient();
-  const { success, error: toastError } = useToast();
+  const { success } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [clinicians, setClinicians] = useState<Clinician[]>([]);
   const [selectedClinicianId, setSelectedClinicianId] = useState<string>("");
@@ -19,6 +19,7 @@ export default function PatientsPage() {
   const [name, setName] = useState("");
   const [internalCode, setInternalCode] = useState("");
   const [creatingPatient, setCreatingPatient] = useState(false);
+  const [createError, setCreateError] = useState("");
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -86,16 +87,44 @@ export default function PatientsPage() {
     e.preventDefault();
     if (!name.trim() || !internalCode.trim()) return;
     setCreatingPatient(true);
-    const { error } = await supabase.from("patient").insert({ name: name.trim(), internal_code: internalCode.trim() });
-    setCreatingPatient(false);
-    if (error) {
-      toastError("Erro ao guardar");
-      return;
+    setCreateError("");
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        setCreateError("A sessão expirou. Entra novamente e volta a tentar.");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profile")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profileError) {
+        setCreateError("Não foi possível verificar o acesso da conta. Volta a tentar.");
+        return;
+      }
+      if (!profile) {
+        setCreateError("Esta conta ainda não tem um perfil clínico configurado. Pede ao administrador para o criar no Supabase.");
+        return;
+      }
+
+      const { error } = await supabase.from("patient").insert({ name: name.trim(), internal_code: internalCode.trim() });
+      if (error) {
+        setCreateError(error.code === "42501"
+          ? "A criação foi recusada pelas permissões da base de dados. Pede ao administrador para verificar as regras de acesso."
+          : "Não foi possível criar o utente. Confirma o código interno e volta a tentar.");
+        return;
+      }
+      success("Guardado com sucesso");
+      setName("");
+      setInternalCode("");
+      loadPatients();
+    } catch {
+      setCreateError("Não foi possível contactar a base de dados. Volta a tentar.");
+    } finally {
+      setCreatingPatient(false);
     }
-    success("Guardado com sucesso");
-    setName("");
-    setInternalCode("");
-    loadPatients();
   };
 
 
@@ -118,6 +147,7 @@ export default function PatientsPage() {
             <button className="btn-brand-primary w-full" disabled={creatingPatient} type="submit">
               {creatingPatient ? "A guardar..." : "Criar paciente"}
             </button>
+            {createError && <p className="text-sm text-red-600" role="alert">{createError}</p>}
           </form>
         </section>
 
